@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:studio": "npx drizzle-kit studio",
-    "db:push": "npx drizzle-kit push:pg"
+    "db:push": "npx drizzle-kit push"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.6",
@@ -17,6 +17,7 @@
     "@radix-ui/react-slot": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.1",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",

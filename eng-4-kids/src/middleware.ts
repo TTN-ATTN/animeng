@@ -1,7 +1,7 @@
 import { clerkMiddleware, getAuth, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Thêm route phải đăng nhập mới được phép truy cập
-const isProtectedRoute = createRouteMatcher(['/learning(.*)'])
+const isProtectedRoute = createRouteMatcher(['/learning(.*)','/shop(.*)','/quests(.*)','leaderboard(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) await auth.protect()

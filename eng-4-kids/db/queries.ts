@@ -1,7 +1,7 @@
 import {cache} from "react";
 import db from "./drizzle";
 import { auth } from "@clerk/nextjs/server";
-import { userProgress } from "./schema";
+import { courses, userProgress } from "./schema";
 import { eq } from "drizzle-orm";
 
 // cache được dùng để lưu trữ dữ liệu tạm thời, giúp giảm thiểu việc truyền Props 
@@ -26,3 +26,12 @@ export const getUserProgress = cache(
         return data;
     }
 );
+
+export const getCourseById = cache(
+    async(courseId: number) => {
+        const data = await db.query.courses.findFirst({
+            where: eq(courses.id, courseId)
+        });
+        return data;
+    }
+)

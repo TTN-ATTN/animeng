@@ -1,3 +1,7 @@
+/*
+    Frontend component: sidebar cho phép người dùng chuyển hướng giữa các trang
+*/
+
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";

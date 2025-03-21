@@ -1,10 +1,14 @@
+/* 
+    Frontend component: List dùng để hiển thị danh sách khóa học và gọi serverside actions 
+*/
+
 "use client";
 
 import { useRouter } from "next/navigation";
 import { courses, userProgress } from "../../../../db/schema";
 import { Card } from "./card";
 import { useTransition } from "react";
-import { upsertUserProgress } from "../../../../actions/user-progress";
+import { upsertUserProgress } from "../../../../actions/user-progress-action";
 
 // thuộc tính courses và activeCourseId của component
 type Props = {

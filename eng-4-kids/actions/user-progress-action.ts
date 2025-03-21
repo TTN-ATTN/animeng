@@ -1,3 +1,7 @@
+/* 
+    Backend: sử dụng Next.js Server Actions và thao tác với database thông qua Drizzle ORM
+*/
+
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";

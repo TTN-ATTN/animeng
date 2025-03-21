@@ -1,3 +1,7 @@
+/* 
+    Backend: Định nghĩa các truy vấn dữ liệu từ cơ sở dữ liệu
+*/
+
 import {cache} from "react";
 import db from "./drizzle";
 import { auth } from "@clerk/nextjs/server";

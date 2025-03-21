@@ -1,3 +1,7 @@
+/*
+    Frontend component: sidebar items dùng để hiển thị các mục trong sidebar
+*/
+
 "use client";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";

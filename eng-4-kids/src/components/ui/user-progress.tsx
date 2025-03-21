@@ -1,3 +1,7 @@
+/* 
+    Frontend component: sử dụng react hooks để lấy dữ liệu từ server, hiển thị thông tin người dùng
+*/
+
 "use client"; // Ensure this is a Client Component
 
 import { Button } from "@/components/ui/button";

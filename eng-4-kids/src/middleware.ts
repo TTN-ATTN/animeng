@@ -1,3 +1,4 @@
+// Backend middleware: xử lý route authentication
 import { clerkMiddleware, getAuth, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Thêm route phải đăng nhập mới được phép truy cập

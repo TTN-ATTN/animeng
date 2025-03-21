@@ -1,3 +1,7 @@
+/*
+    Backend: Định nghĩa cấu trúc dữ liệu cho cơ sở dữ liệu
+*/
+
 import { relations } from "drizzle-orm";
 import {
     integer,

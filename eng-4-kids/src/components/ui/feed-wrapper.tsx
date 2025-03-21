@@ -1,3 +1,7 @@
+/*
+    Fronrtend component: wrapper để tạo layout 
+*/
+
 type Props = {
     children: React.ReactNode;
 }

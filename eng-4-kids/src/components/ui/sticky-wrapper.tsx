@@ -1,3 +1,7 @@
+/* 
+    Frontend component: sticky sidebar để cuộn trang
+*/
+
 type Props = {
     children: React.ReactNode; // Prop `children` dùng để nhúng các component con vào component cha.
 }

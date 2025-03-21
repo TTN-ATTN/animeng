@@ -12,7 +12,7 @@ export default function LearningPage(){
                 hasSubscription={false}
             />
             </StickyWrapper>
-            <FeedWrapper><Header2 title="beginner"/></FeedWrapper>
+            <FeedWrapper><Header2 title="Khóa cơ bản"/></FeedWrapper>
         </div>
     );
 }

@@ -11,6 +11,13 @@ type Props = {
     disabled?: boolean
 }
 
+// Mapping tên khóa học từ tiếng Anh sang tiếng Việt
+const courseNameMapping: Record<string, string> = {
+    beginner: "Khóa cơ bản",
+    intermediate: "Khóa trung cấp",
+    advanced: "Khóa nâng cao",
+};
+
 export const Card = ({ title, id, imageSrc, active, onClick, disabled }: Props) => {
     return(
         <div
@@ -23,8 +30,8 @@ export const Card = ({ title, id, imageSrc, active, onClick, disabled }: Props) 
             <div className="min-[24px] w-full flex items-center justify-end">
                 {
                     active && (
-                        <div className="rounded-md bg-green-400 flex items-center justify-center p-1 ">
-                            <Check className="text-white stroke=[4] h-4 w-4" />
+                        <div className="rounded-md bg-green-400 flex items-center justify-center p-1">
+                            <Check className="text-white stroke-[4] h-4 w-4" />
                         </div> 
                     )
                 }
@@ -37,7 +44,7 @@ export const Card = ({ title, id, imageSrc, active, onClick, disabled }: Props) 
                 className="rounded-lg drop-shadow-md object-cover"
             />
             <p className="text-neutral-700 text-center font-bold text-lg mt-3">
-                {title}
+                {courseNameMapping[title] || title}
             </p>
         </div>
     )

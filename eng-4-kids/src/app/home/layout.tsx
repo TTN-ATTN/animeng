@@ -2,6 +2,7 @@
 import { Header } from "./header";
 import { Footer } from "./footer";
 
+// Props có nghĩa là các thuộc tính của một component, ở đây là children
 type Props = {
     children: React.ReactNode;
 }

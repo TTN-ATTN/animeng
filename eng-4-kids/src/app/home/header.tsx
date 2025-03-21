@@ -1,3 +1,9 @@
+/*
+    * Component header của trang web
+    * Bao gồm logo, tên trang web và nút đăng nhập
+    * Nếu đã đăng nhập thì sẽ hiển thị thông tin người dùng
+    * Nếu chưa đăng nhập thì sẽ hiển thị nút đăng nhập
+*/
 import Image from "next/image";
 import { Loader } from "lucide-react";
 import { ClerkLoading, ClerkLoaded, SignedIn, SignedOut, SignInButton, UserButton, SignUpButton } from "@clerk/nextjs";
@@ -23,7 +29,7 @@ export const Header = () => {
                         <UserButton />
                     </SignedIn>
                     <SignedOut>
-                        <SignInButton mode="modal" forceRedirectUrl="/home/learning" signUpForceRedirectUrl="/home">
+                        <SignInButton mode="modal" forceRedirectUrl="/learning" signUpForceRedirectUrl="/home">
                             <Button variant="default" size="lg">Đăng nhập</Button>
                         </SignInButton>
                     </SignedOut>

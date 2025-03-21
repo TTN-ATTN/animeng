@@ -1,6 +1,11 @@
-import { clerkMiddleware, getAuth } from "@clerk/nextjs/server";
+import { clerkMiddleware, getAuth, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware({});
+// Thêm route phải đăng nhập mới được phép truy cập
+const isProtectedRoute = createRouteMatcher(['/learning(.*)'])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect()
+})
 
 export const config = {
     matcher: [

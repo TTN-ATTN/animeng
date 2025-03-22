@@ -29,9 +29,11 @@ const HomePage = () => {
                     </ClerkLoading>
                     <ClerkLoaded>
                         <SignedIn>
-                            <Button variant="greenBtn" size="lg" className="w-full">
-                                <Link href="/learning">Tiếp tục học</Link>
-                            </Button>
+                            <Link href="/learning">
+                                <Button variant="greenBtn" size="lg" className="w-full">
+                                    Tiếp tục học
+                                </Button>
+                            </Link>
                         </SignedIn>
                         <SignedOut>
                             <SignUpButton forceRedirectUrl="/learning">

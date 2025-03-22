@@ -17,13 +17,13 @@ export default async function LearningPage(){
     return(
         <div className="flex flex-row-reverse gap-[48px] px-6">
             <StickyWrapper><UserProgress 
-                activeCourse={{title: "beginner", imageSrc: "/greenbutton.png"}}
+                activeCourse={userProgress.activeCourse}
                 hearts={10}
                 points={100}
                 hasSubscription={false}
             />
             </StickyWrapper>
-            <FeedWrapper><Header2 title="Khóa cơ bản"/></FeedWrapper>
+            <FeedWrapper><Header2 title={userProgress.activeCourse.title}/></FeedWrapper>
         </div>
     );
 }

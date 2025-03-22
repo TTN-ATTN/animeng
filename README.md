@@ -1,4 +1,4 @@
-# Eng-4-kids
+# ANIMENG
 English learning website for kids, inspired by Duolingo
 
 ## Requirements: 
@@ -6,13 +6,13 @@ English learning website for kids, inspired by Duolingo
 - Dependencies listed in package.json
 
 ```
-git clone https://github.com/TTN-ATTN/Eng-4-kids.git
-cd eng-4-kids
+git clone https://github.com/TTN-ATTN/animeng.git
+cd animeng
 npm install
 ```
 
 ## Run locally:
-Make sure that your current working directory is **eng-4-kids**
+Make sure that your current working directory is **animeng**
 Run the following command:
 ```
 npm run dev

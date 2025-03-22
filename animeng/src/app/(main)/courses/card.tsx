@@ -1,3 +1,7 @@
+/* 
+    Frontend component: hiển thị các khóa học trong trang dưới dạng thẻ
+*/
+
 import { cn } from "@/lib/utils"
 import { Check } from "lucide-react"
 import Image from "next/image"

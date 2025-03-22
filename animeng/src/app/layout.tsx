@@ -16,7 +16,7 @@ const font = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Eng-4-Kids",
+  title: "ANIMENG - Học tiếng Anh cho trẻ em",
   description: "A platform to help children learn English interactively.",
 };
 

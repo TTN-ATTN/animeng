@@ -1,5 +1,5 @@
 // Backend middleware: xử lý route authentication
-import { clerkMiddleware, getAuth, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Thêm route phải đăng nhập mới được phép truy cập
 const isProtectedRoute = createRouteMatcher(['/learning(.*)','/shop(.*)','/quests(.*)','leaderboard(.*)'])

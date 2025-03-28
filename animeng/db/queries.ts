@@ -19,7 +19,7 @@ export const getCourses = cache(
 export const getUserProgress = cache(
     async() => {
         const { userId } = await auth();
-        if(!userId) return null;
+        if(!userId) return null;    
         const data = await db.query.userProgress.findFirst({
             where: eq(userProgress.userId, userId), 
             with: {
@@ -37,5 +37,5 @@ export const getCourseById = cache(
             where: eq(courses.id, courseId)
         });
         return data;
-    }
+    }   
 )

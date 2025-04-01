@@ -35,6 +35,7 @@ export const SideBar = ({ className }: Props) => {
                 <SidebarItem label="Xếp hạng" href="/leaderboard" iconSrc="/leaderboard.svg"/>
                 <SidebarItem label="Cửa hàng" href="/shop" iconSrc="/shop.svg"/>
                 <SidebarItem label="Nhiệm vụ" href="/quests" iconSrc="/quests.svg"/>
+                <SidebarItem label="Chat with waifu" href="/chat" iconSrc="/chatbot.svg"/>
             </div>
 
             {/* User Button - Stays at the bottom */}

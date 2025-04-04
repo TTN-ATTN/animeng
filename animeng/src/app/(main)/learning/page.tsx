@@ -2,7 +2,7 @@ import { FeedWrapper } from "@/components/ui/feed-wrapper";
 import { StickyWrapper } from "@/components/ui/sticky-wrapper";
 import { Header2 } from "../header";
 import { UserProgress } from "@/components/ui/user-progress";
-import { getUnits, getUserProgress } from "../../../../db/queries";
+import { getCourseProgress, getLessonPercent, getUnits, getUserProgress } from "../../../../db/queries";
 import { redirect } from "next/navigation";
 import { Unit } from "./unit";
 
@@ -10,9 +10,11 @@ import { Unit } from "./unit";
 export default async function LearningPage() {
     const userProgress = await getUserProgress();
     const units = await getUnits();
+    const courseProgress = await getCourseProgress();
+    const lessonPercent = await getLessonPercent();
 
     // Nếu không có khóa học đang học thì redirect về trang danh sách khóa học
-    if (!userProgress || !userProgress.activeCourse) {
+    if (!userProgress || !userProgress.activeCourse || !courseProgress) {
         redirect("/courses");
     }
 
@@ -36,8 +38,8 @@ export default async function LearningPage() {
                             description={unit.description}
                             order={unit.order}
                             lessons={unit.lessons}
-                            activeLesson={undefined}
-                            activeLessonProgress={0}
+                            activeLesson={courseProgress.activeLesson}
+                            activeLessonProgress={lessonPercent}
                         >
                         </Unit>
                     </div>

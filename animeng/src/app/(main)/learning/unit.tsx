@@ -8,7 +8,7 @@ type Props = {
     description: string;
     order: number;
     lessons: (typeof lessons.$inferSelect & { completed: boolean })[];
-    activeLesson: (typeof lessons.$inferSelect & { units: typeof units.$inferSelect }) | undefined;
+    activeLesson: (typeof lessons.$inferSelect & { unit: typeof units.$inferSelect }) | undefined;
     activeLessonProgress: number;
 }
 

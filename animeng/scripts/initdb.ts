@@ -115,6 +115,27 @@ const main = async () => {
                 question: "Động từ nào sau đây có nghĩa là 'đi'?",
                 order: 1,
             },
+            {
+                id: 3,
+                lessonId: 3,
+                type: "WRITING",
+                question: "Động từ nào sau đây có nghĩa là 'đi'?",
+                order: 1,
+            },
+            {
+                id: 4,
+                lessonId: 4,
+                type: "WRITING",
+                question: "Động từ nào sau đây có nghĩa là 'đi'?",
+                order: 1,
+            },
+            {
+                id: 5,
+                lessonId: 5,
+                type: "WRITING",
+                question: "Động từ nào sau đây có nghĩa là 'đi'?",
+                order: 1,
+            },
         ]);
 
         await db.insert(schema.challOptions).values([

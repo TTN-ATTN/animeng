@@ -42,7 +42,8 @@ export const getCourseById = cache(
 
 export const getUnits = cache(async () => {
     const userProgress = await getUserProgress();
-    if (!userProgress?.activeCourseId) return [];
+    const userId = await auth();
+    if (!userId || !userProgress?.activeCourseId) return [];
 
     const temp_data = await db.query.units.findMany({
         where: eq(units.courseId, userProgress.activeCourseId),

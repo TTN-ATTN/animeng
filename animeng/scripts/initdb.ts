@@ -76,6 +76,27 @@ const main = async () => {
                 title: "Lesson 2",
                 description: "Nouns and verbs",
                 order: 2,
+            },
+            {
+                id: 3,
+                unitId: 1,
+                title: "Lesson 3",
+                description: "Adjectives and adverbs",
+                order: 3,
+            },
+            {
+                id: 4,
+                unitId: 1,
+                title: "Lesson 4",
+                description: "This is lesson 4",
+                order: 4,
+            },
+            {
+                id: 5,
+                unitId: 1,
+                title: "Lesson 5",
+                description: "This is lesson 5",
+                order: 5,
             }
         ]);
 
@@ -125,8 +146,8 @@ const main = async () => {
                 text: "eat",
                 correct: false,
             }]);
-        
-        
+
+
         console.log("inilized database successfully");
     }
 

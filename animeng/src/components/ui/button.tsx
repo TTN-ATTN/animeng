@@ -19,13 +19,14 @@ const buttonVariants = cva(
         redBtn: "bg-rose-400 text-primary-foreground hover:bg-rose-400/90 border-rose-600 border-b-4 active:border-b-0",
         purpleBtn: "bg-purple-400 text-primary-foreground hover:bg-purple-400/90 border-purple-600 border-b-4 active:border-b-0",
         yellowBtn: "bg-yellow-400 text-primary-foreground hover:bg-yellow-400/90 border-yellow-600 border-b-4 active:border-b-0",
+        lockedBtn: "bg-white text-black border border-state-200 bordere-2 border-b-4 active:border-b-2 hover:bg-slate-100 text-slate-600",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 px-6 has-[>svg]:px-4",
         icon: "size-9",
-        round: "rounded-full h-9 w-9",
+        round: "rounded-full h-15 w-15",
       },
     },
     defaultVariants: {

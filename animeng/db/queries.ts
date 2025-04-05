@@ -54,6 +54,7 @@ export const getUnits = cache(async () => {
     const data = temp_data.map((unit) => {
         // Map lesson ở trong unit
         const completedLessons = unit.lessons.map((lesson) => {
+            if(lesson.challenges.length === 0) return { ...lesson, completed: false };
             // Kiểm tra xem tất cả các thử thách trong bài học đã hoàn thành chưa
             const completedChalls = lesson.challenges.every((challenge) => {
                 return challenge.challProgress

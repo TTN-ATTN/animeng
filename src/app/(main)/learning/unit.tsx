@@ -12,7 +12,7 @@ type Props = {
     activeLessonProgress: number;
 }
 
-export const Unit = ({ id, title, description, order, lessons, activeLesson, activeLessonProgress }: Props) => {
+export const Unit = ({ title, description, lessons, activeLesson, activeLessonProgress }: Props) => {
     return (
         <>
             <Banner title={title} description={description}></Banner>

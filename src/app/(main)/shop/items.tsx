@@ -5,6 +5,7 @@ import Image from "next/image";
 import {Button} from "@/components/ui/button";
 import { useTransition } from "react";
 import { refillHearts } from "../../../../actions/user-progress";
+import { createStripeUrl } from "../../../../actions/user-subscription";
 
 type Props = {
     hearts: number;
@@ -23,6 +24,18 @@ export const Items = ({hearts, points, hasSubscription}: Props) => {
         }
         startTransition(() => {
             refillHearts().catch(() => toast.error("Something went wrong!"))
+        });
+    };
+    const onUpgrade = () => {
+        startTransition(() => {
+            createStripeUrl()
+            .then((response) => {
+                if (response.data) {
+                    window.location.href = response.data;
+                }
+            })
+            .catch (() => toast.error("Something went wrong!"));
+            
         });
     };
     return (
@@ -45,6 +58,17 @@ export const Items = ({hearts, points, hasSubscription}: Props) => {
                     </p>
                     </div>
                 )}
+                </Button>
+            </div>
+            <div className="flex items-center w-full p-4 pt-8 gap-x-4 border-t-2">
+                <Image src = "/sparkling-heart.svg" alt = "Hearts" height = {60} width = {60}/>
+                <div className = "flex-1">
+                    <p className="text-neutral-700 text-base lg:text-xl font-bold">Unlimited hearts</p>
+                </div>
+                <Button 
+                    onClick = {onUpgrade}
+                    disabled = {pending || hasSubscription} >
+                    {hasSubscription ? "Active" : "Upgrade"}
                 </Button>
             </div>
         </ul>

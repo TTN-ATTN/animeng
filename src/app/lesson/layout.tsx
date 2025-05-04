@@ -1,15 +1,16 @@
-type Props ={
+type Props = {
     children: React.ReactNode;
-}
-
-const lessonLayout = ({children}: Props) => {
-    return(
-        <div className="flex flex-col h-full">
-            <div className="flex flex-col h-full w-full">
-                {children}
-            </div>
-        </div>
-    )
-};
-
-export default lessonLayout;
+  };
+  
+  const LessonLayout = ({ children }: Props) => {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <main className="flex-1 w-full flex flex-col">
+          {children}
+        </main>
+      </div>
+    );
+  };
+  
+  export default LessonLayout;
+  

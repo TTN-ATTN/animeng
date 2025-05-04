@@ -2,7 +2,7 @@ import { FeedWrapper } from "@/components/ui/feed-wrapper";
 import { StickyWrapper } from "@/components/ui/sticky-wrapper";
 import { Header2 } from "../header";
 import { UserProgress } from "@/components/ui/user-progress";
-import { getCourseProgress, getLessonPercent, getUnits, getUserProgress } from "../../../../db/queries";
+import { getCourseProgress, getLessonPercent, getUnits, getUserProgress, getUserSubscription} from "../../../../db/queries";
 import { redirect } from "next/navigation";
 import { Unit } from "./unit";
 
@@ -12,7 +12,9 @@ export default async function LearningPage() {
     const units = await getUnits();
     const courseProgress = await getCourseProgress();
     const lessonPercent = await getLessonPercent();
+    const userSubscription = await getUserSubscription();
    
+    
 
     // Nếu không có khóa học đang học thì redirect về trang danh sách khóa học
     if (!userProgress || !userProgress.activeCourse || !courseProgress) {
@@ -26,7 +28,7 @@ export default async function LearningPage() {
                 
                 hearts={userProgress.hearts}
                 points={userProgress.points}
-                hasSubscription={false}
+                hasSubscription={!!userSubscription?.isActive}
             />
             </StickyWrapper>
 

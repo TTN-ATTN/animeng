@@ -5,7 +5,7 @@
 "use server";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getCourseById, getUserProgress } from "../db/queries";
+import { getCourseById, getUserProgress, getUserSubscription } from "../db/queries";
 import { challProgress, userProgress, challenges } from "../db/schema";
 import db from "../db/drizzle";
 import { revalidatePath } from "next/cache";
@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import {and, eq } from "drizzle-orm";
 import { upsertChallengeProgess } from "./challenge-progess";
 import { matchesGlob } from "path";
+import { get } from "http";
 
 const POINTS_TO_REFILL  = 10;
 
@@ -29,6 +30,10 @@ export const upsertUserProgress = async (courseId: number) => {
     if (!course)
         throw new Error("Không tìm thấy khóa học");
 
+    if (!course.units.length || !course.units[0].lessons.length) 
+    {
+        throw new Error("Khóa học không có bài học nào");
+    }
     const existingUserProgress = await getUserProgress();
 
     if (existingUserProgress) {
@@ -64,6 +69,8 @@ export const reduceHearts = async (challengeId : number) => {
     }
 
     const currentUserProgress = await getUserProgress();
+    const userSubscription = await getUserSubscription();
+
     const challenge = await db.query.challenges.findFirst({
         where: eq(challenges.id,challengeId),
     });
@@ -91,7 +98,10 @@ export const reduceHearts = async (challengeId : number) => {
         throw new Error("user progress not found");
     }
 
-    // handle subscription
+    if (userSubscription?.isActive)
+    {
+        return {error: "subscription"};
+    }
 
     if (currentUserProgress.hearts === 0)
     {

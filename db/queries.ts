@@ -5,7 +5,7 @@
 import { cache } from "react";
 import db from "./drizzle";
 import { auth } from "@clerk/nextjs/server";
-import { courses, userProgress, units, challProgress, lessons } from "./schema";
+import { courses, userProgress, units, challProgress, lessons, userSubscription } from "./schema";
 import { eq } from "drizzle-orm";
 
 // cache được dùng để lưu trữ dữ liệu tạm thời, giúp giảm thiểu việc truyền Props 
@@ -34,7 +34,17 @@ export const getUserProgress = cache(
 export const getCourseById = cache(
     async (courseId: number) => {
         const data = await db.query.courses.findFirst({
-            where: eq(courses.id, courseId)
+            where: eq(courses.id, courseId),
+            with: {
+                units: {
+                    orderBy: (units, { asc }) => [asc(units.order)],
+                    with: {
+                        lessons: {
+                            orderBy: (lessons, { asc }) => [asc(lessons.order)],
+                        },
+                    },
+                },
+            },
         });
         return data;
     }
@@ -46,8 +56,21 @@ export const getUnits = cache(async () => {
     if (!userId || !userProgress?.activeCourseId) return [];
 
     const temp_data = await db.query.units.findMany({
+        orderBy: (units, { asc }) => [asc(units.order)],
         where: eq(units.courseId, userProgress.activeCourseId),
-        with: { lessons: { with: { challenges: { with: { challProgress: true } } } } },
+        with: { 
+            lessons: { 
+                orderBy: (lessons, { asc }) => [asc(lessons.order)],
+                with: { 
+                    challenges: { 
+                        orderBy: (challenges, { asc }) => [asc(challenges.order)],
+                        with: { 
+                            challProgress: true 
+                        } 
+                    } 
+                } 
+            } 
+        },
     });
 
     // Map unit ở trong temp_data 
@@ -160,3 +183,21 @@ export const getLessonPercent = cache(
         return percent;
     }
 );
+
+
+export const getUserSubscription = cache(async () => {
+    const {userId} = await auth();
+    if(!userId) return null;
+    const data = await db.query.userSubscription.findFirst({
+        where: eq(userSubscription.userId, userId),
+    })
+
+    if (!data) return null;
+    const isActive = 
+        data.stripePriceId &&
+        data.stripeCurrentPeriodEnd?.getTime() + 1000 * 60 * 60 * 24 * 7 > Date.now();
+    return {
+        ...data,
+        isActive: !!isActive,   
+    };
+})

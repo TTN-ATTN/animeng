@@ -1,6 +1,6 @@
 import { StickyWrapper } from "@/components/ui/sticky-wrapper";
 import { UserProgress } from "@/components/ui/user-progress";
-import { getUserProgress } from "../../../../db/queries";
+import { getUserProgress, getUserSubscription } from "../../../../db/queries";
 import { redirect } from "next/navigation";
 import { FeedWrapper } from "@/components/ui/feed-wrapper";
 import Image from "next/image";
@@ -9,9 +9,14 @@ import { Items } from "./items";
 
 const ShopPage = async () => {
     const userProgressData = getUserProgress();
+    const userSubscriptionData = getUserSubscription();
 
-    const  [ userProgress ] = await Promise.all([
+
+    const  [ userProgress,
+        userSubscription
+     ] = await Promise.all([
         userProgressData,
+        userSubscriptionData
     ]);
     if (!userProgress || ! userProgress.activeCourse)
     {
@@ -25,7 +30,7 @@ const ShopPage = async () => {
                 activeCourse={userProgress.activeCourse}
                 hearts = {userProgress.hearts}
                 points = {userProgress.points}
-                hasSubscription = {false}/>
+                hasSubscription = {!!userSubscription?.isActive}/>
             </StickyWrapper>
             <FeedWrapper>
                 <div className = "w-full flex flex-col items-cenetr">
@@ -34,9 +39,12 @@ const ShopPage = async () => {
                     Shop
                 </h1>
                 <p className = "text-muted-foreground text-center text-lg mb-6">
-                    "Spend your points on items to help you in your learning journey!"
+                    Spend your points on items to help you in your learning journey!
                 </p>
-                <Items hearts = {userProgress.hearts} points = {userProgress.points} hasSubscription = {false}/>
+                <Items 
+                hearts = {userProgress.hearts} 
+                points = {userProgress.points} 
+                hasSubscription = {!!userSubscription?.isActive}/>
 
                 </div>
             </FeedWrapper>

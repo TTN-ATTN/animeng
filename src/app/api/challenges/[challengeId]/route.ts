@@ -15,6 +15,7 @@ export const GET = async (
     const data = await db.query.challenges.findMany({
         where: eq(challenges.id, params.challengeid),
     });
+    
     return NextResponse.json(data[0]);
 };
 

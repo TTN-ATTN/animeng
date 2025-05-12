@@ -5,14 +5,12 @@ export const ChallengeEdit = () => {
         <Edit>
             <SimpleForm>
                 <TextInput source="question" validate={[required()]} label="Question" />
-                <SelectInput source="type"
+                <SelectInput source="type" validate={[required()]} label="Type" 
                     choices={[
-                        { id: "CHOICE", name: "CHOICE"},
-                        { id: "SPELLING", name: "SPELLING"},
-                        { id: "WRITING", name: "WRITING"},
-
-                    ]}
-                    validate={[required()]}/>
+                        {id: "CHOICE", name:"CHOICE"},
+                        {id: "SPELLING", name:"SPELLING"},
+                        {id: "WRITING", name:"WRITING"}
+                    ]}/>
                 <ReferenceInput source="lessonId" reference="lessons"/>
                 <NumberInput source="order" validate={[required()]} label="Order" />
             </SimpleForm>

@@ -1,4 +1,4 @@
-import { Datagrid, List, NumberField, ReferenceField, SelectField, TextField } from "react-admin";
+import { Datagrid, List, NumberField, ReferenceField, TextField } from "react-admin";
 
 export const ChallengeList = () => {
     return (
@@ -6,13 +6,7 @@ export const ChallengeList = () => {
             <Datagrid rowClick="edit">
                 <TextField source="id" />
                 <TextField source="question" />
-                <SelectField source="type" 
-                    choices={[
-                        { id: "CHOICE", name: "CHOICE"},
-                        { id: "SPELLING", name: "SPELLING"},
-                        { id: "WRITING", name: "WRITING"},
-
-                    ]}/>
+                <TextField source="type" />
                 <ReferenceField source="lessonId" reference="lessons" />
                 <NumberField source="order" />
             </Datagrid>

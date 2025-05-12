@@ -42,7 +42,7 @@ const App = () => {
                 edit={LessonEdit}
                 recordRepresentation="title" />
             <Resource 
-                name="Challenges" 
+                name="challenges" 
                 list={ChallengeList} 
                 create={ChallengeCreate}
                 edit={ChallengeEdit}

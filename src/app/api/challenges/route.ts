@@ -22,6 +22,7 @@ export const POST = async (req: Request) => {
     const data = await db.insert(challenges).values({
         ...body,
     }).returning();
+    console.log("Inserted new data sucessfully", data);
     return NextResponse.json(data[0]);
 };
 

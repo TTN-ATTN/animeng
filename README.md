@@ -7,7 +7,6 @@ English learning website for kids, inspired by Duolingo
 
 ```
 git clone https://github.com/TTN-ATTN/animeng.git
-cd animeng
 npm install
 ```
 

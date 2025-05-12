@@ -67,6 +67,8 @@ export const lessonsRelations = relations(lessons, ({many, one}) => ({
 }));
 
 export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "VOICE", "WRITING"]);
+// Suy nghĩ lại về voice có nên lm hay không ?.
+
 
 export const challenges = pgTable("challenges", {
     id: serial("id").primaryKey(),

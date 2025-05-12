@@ -2,10 +2,21 @@
 
 import { Admin, ListGuesser, Resource } from "react-admin";
 import simpileRestProvider from "ra-data-simple-rest";
+
 import { CourseList } from "./course/list";
 import { CourseCreate } from "./course/create";
 import { CourseEdit } from "./course/edit";
+
 import { UnitList } from "./unit/list";
+import { UnitCreate } from "./unit/create";
+import { UnitEdit } from "./unit/edit";
+
+import { LessonList } from "./lesson/list";
+import { LessonCreate } from "./lesson/create";
+import { LessonEdit } from "./lesson/edit";
+import { ChallengeList } from "./challenge/list";
+import { ChallengeCreate } from "./challenge/create";
+import { ChallengeEdit } from "./challenge/edit";
 
 const dataProvider = simpileRestProvider("/api");
 
@@ -21,8 +32,20 @@ const App = () => {
             <Resource 
                 name="units" 
                 list={UnitList} 
-                create={CourseCreate}
-                edit={CourseEdit}
+                create={UnitCreate}
+                edit={UnitEdit}
+                recordRepresentation="title" />
+            <Resource 
+                name="lessons" 
+                list={LessonList} 
+                create={LessonCreate}
+                edit={LessonEdit}
+                recordRepresentation="title" />
+            <Resource 
+                name="Challenges" 
+                list={ChallengeList} 
+                create={ChallengeCreate}
+                edit={ChallengeEdit}
                 recordRepresentation="title" />
         </Admin>
     );

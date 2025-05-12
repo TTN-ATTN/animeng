@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { FeedWrapper } from "@/components/ui/feed-wrapper";
 import Image from "next/image";
 import { Items } from "./items";
-
+import { Quests } from "@/components/ui/quests";
 
 const ShopPage = async () => {
     const userProgressData = getUserProgress();
@@ -31,9 +31,10 @@ const ShopPage = async () => {
                 hearts = {userProgress.hearts}
                 points = {userProgress.points}
                 hasSubscription = {!!userSubscription?.isActive}/>
+                <Quests points={userProgress.points}/>
             </StickyWrapper>
             <FeedWrapper>
-                <div className = "w-full flex flex-col items-cenetr">
+                <div className = "w-full flex flex-col items-center">
                 <Image src = "/shop.svg" alt = "Shop" height = {90} width = {90}/>
                 <h1 className="text-center font-bold text-neutral-800 text-2xl my-6">
                     Shop

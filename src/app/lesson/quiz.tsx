@@ -169,9 +169,6 @@ export const Quiz = ({lessonId, lessonChallenges, hearts, percent, subscription}
            
         }
     }
-
-  
-
     //* Hieu added this to resolve console error, don't delete it *
     useEffect(() => {
         if (!challenge) {

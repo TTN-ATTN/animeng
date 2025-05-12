@@ -5,7 +5,8 @@ import { UserProgress } from "@/components/ui/user-progress";
 import { getCourseProgress, getLessonPercent, getUnits, getUserProgress, getUserSubscription} from "../../../../db/queries";
 import { redirect } from "next/navigation";
 import { Unit } from "./unit";
-
+import { Promo } from "@/components/ui/promo";
+import { Quests } from "@/components/ui/quests";
 
 export default async function LearningPage() {
     const userProgress = await getUserProgress();
@@ -13,7 +14,7 @@ export default async function LearningPage() {
     const courseProgress = await getCourseProgress();
     const lessonPercent = await getLessonPercent();
     const userSubscription = await getUserSubscription();
-   
+    const isPro = !!userSubscription?.isActive;
     
 
     // Nếu không có khóa học đang học thì redirect về trang danh sách khóa học
@@ -23,13 +24,17 @@ export default async function LearningPage() {
 
     return (
         <div className="flex flex-row-reverse gap-[48px] px-6">
-            <StickyWrapper><UserProgress
+            <StickyWrapper>
+                <UserProgress
                 activeCourse={userProgress.activeCourse}
-                
                 hearts={userProgress.hearts}
                 points={userProgress.points}
                 hasSubscription={!!userSubscription?.isActive}
-            />
+                />
+                {!isPro && (
+                    <Promo />
+                )}
+                <Quests points={userProgress.points}/>
             </StickyWrapper>
 
             <FeedWrapper><Header2 title={userProgress.activeCourse.title} />

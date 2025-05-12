@@ -201,3 +201,19 @@ export const getUserSubscription = cache(async () => {
         isActive: !!isActive,   
     };
 })
+// Lấy ra danh sách người học hàng đầu
+export const getTopUsers = cache( async () => {
+    const {userId} = await auth();
+    if(!userId) return null;
+    const data = await db.query.userProgress.findMany({
+        orderBy: (userProgress, { desc }) => [desc(userProgress.points)],
+        limit: 50,
+        columns: {
+            userId: true,
+            userName: true,
+            userImageSrc: true,
+            points: true,
+        },
+    });
+    return data;
+})

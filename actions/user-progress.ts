@@ -14,8 +14,7 @@ import {and, eq } from "drizzle-orm";
 import { upsertChallengeProgess } from "./challenge-progess";
 import { matchesGlob } from "path";
 import { get } from "http";
-
-const POINTS_TO_REFILL  = 10;
+import { POINTS_TO_REFILL } from "../constants";
 
 export const upsertUserProgress = async (courseId: number) => {
     const { userId } = await auth();

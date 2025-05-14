@@ -7,7 +7,6 @@ English learning website for kids, inspired by Duolingo
 
 ```
 git clone https://github.com/TTN-ATTN/animeng.git
-cd animeng
 npm install
 ```
 
@@ -43,4 +42,6 @@ Access the website on your local machine: http://localhost:3000
 
 Get userID from clerk
 ![alt text](image.jpg)
+
+=======
 

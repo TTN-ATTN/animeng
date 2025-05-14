@@ -5,7 +5,6 @@ import db from "../../../../../db/drizzle"
 import { userSubscription } from "../../../../../db/schema";
 import { eq } from "drizzle-orm";
 
-
 export async function POST(req: Request) {
   const body = await req.text(); // ✅ Get raw body
   const signature = req.headers.get("Stripe-Signature") as string;

@@ -18,3 +18,8 @@ Run the following command:
 npm run dev
 ```
 Access the website on your local machine: http://localhost:3000
+
+## Run Payment method
+``` stripe login
+    stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```

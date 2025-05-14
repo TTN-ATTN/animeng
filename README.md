@@ -40,8 +40,9 @@ Access the website on your local machine: http://localhost:3000
 
 ## To access admin page
 
-Get userID from clerk
+Get userID from clerk and add to /lib/admin.ts
+
 ![alt text](image.jpg)
 
-=======
+
 

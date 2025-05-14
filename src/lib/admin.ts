@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server"
 
 const whitelist = [
-    "user_2wqnwL2LkH7qGB6OkwUpCqHKs3E",
+    "user_...pCqHKs3E", // Your user ID here.
 ]
 
 export const getIsAdmin = async () => {

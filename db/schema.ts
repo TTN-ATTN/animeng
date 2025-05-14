@@ -66,7 +66,7 @@ export const lessonsRelations = relations(lessons, ({many, one}) => ({
     challenges: many(challenges),
 }));
 
-export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "WRITING"]);
+export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "VOICE", "WRITING"]);
 // Suy nghĩ lại về voice có nên lm hay không ?.
 
 

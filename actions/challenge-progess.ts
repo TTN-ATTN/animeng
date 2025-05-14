@@ -1,6 +1,6 @@
 "use server";
 
-import { getUserProgress } from "../db/queries";
+import { getUserProgress, getUserSubscription } from "../db/queries";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import db from "../db/drizzle";
@@ -19,6 +19,8 @@ export const upsertChallengeProgess = async (challengeId: number) =>
 
     const currentUserProgress = await getUserProgress();
     // handle subscription query later
+    const userSubscription = await getUserSubscription(); 
+
 
     if (!currentUserProgress)
     {
@@ -50,7 +52,7 @@ export const upsertChallengeProgess = async (challengeId: number) =>
 
     const isPractice = !!existingChallengeProgress;
 
-    if (currentUserProgress.hearts === 0 && !isPractice)
+    if (currentUserProgress.hearts === 0 && !isPractice && !userSubscription?.isActive)
     {
         return {error: "hearts"};
     }

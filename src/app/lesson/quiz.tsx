@@ -1,6 +1,6 @@
 "use client";
 
-import { challenges, challOptions } from "../../../db/schema";
+import { challenges, challOptions, userSubscription} from "../../../db/schema";
 import { useState, useTransition,  useEffect} from "react";
 import { Header } from "./header";
 import { QuestionBubble } from "./question-bubble";
@@ -9,7 +9,7 @@ import { Footer } from "./footer";
 import {toast} from "sonner";
 import { upsertChallengeProgess } from "../../../actions/challenge-progess";
 import { reduceHearts } from "../../../actions/user-progress";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 import { useAudio, useWindowSize, useMount} from "react-use";
 import { Resultcard } from "./result-card";
 import  Image  from "next/image";
@@ -25,7 +25,9 @@ type Props = {
     })[];
     hearts: number;
     percent: number;
-    subscription: any; // implement subscription type later   
+    subscription: typeof userSubscription.$inferSelect &{
+        isActive: boolean;
+    } | null;
 }
 
 export const Quiz = ({lessonId, lessonChallenges, hearts, percent, subscription}: Props) => {
@@ -167,9 +169,6 @@ export const Quiz = ({lessonId, lessonChallenges, hearts, percent, subscription}
            
         }
     }
-
-  
-
     //* Hieu added this to resolve console error, don't delete it *
     useEffect(() => {
         if (!challenge) {
@@ -229,7 +228,7 @@ export const Quiz = ({lessonId, lessonChallenges, hearts, percent, subscription}
                 percent={p}
                 subscription={!!subscription?.isActive}    
             />
-            <div className = "flex-1">
+            <div className = "max-w-[980px] mx-auto flex-1 w-full flex flex-col lg:flex-row items-center justify-center p-4 gap-2">
                 <div className = "h-full flex items-center justify-center">
                     <div className = "lg:min-h-[350px] lg:w-[600px] w-full px-6 lg:px-0 flex flex-col gap-y-12">
                         <h1 className = "text-lg lg:text-3xl text-center lg:text-start font-bold text-neutral-700">

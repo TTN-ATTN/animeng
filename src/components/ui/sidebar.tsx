@@ -23,7 +23,7 @@ export const SideBar = ({ className }: Props) => {
         <div className={cn("flex flex-col lg:w-[256px] min-h-screen lg:fixed left-0 top-0 px-4 border-r-2 bg-cyan-100", className)}>
             {/* Logo Section */}
             <div className="hidden lg:flex pl-4 pt-8 items-center gap-x-3">
-                <Image src="/mascot.png" height={40} width={40} alt="mascot image" />
+                <Image src="/anime-girl-reading.gif" height={40} width={40} alt="mascot image" />
                 <h1 className="lg:text-xl text-2xl font-extrabold text-amber-300 tracking-wide">
                     <Link href="/home">ANIMENG</Link>
                 </h1>

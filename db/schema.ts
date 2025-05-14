@@ -9,7 +9,8 @@ import {
     pgEnum,
     pgTable,
     serial,
-    text
+    text, 
+    timestamp,
 } from "drizzle-orm/pg-core";
 
 // Định nghĩa bảng "courses" chứa thông tin các khóa học
@@ -65,7 +66,9 @@ export const lessonsRelations = relations(lessons, ({many, one}) => ({
     challenges: many(challenges),
 }));
 
-export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "VOICE", "WRITING"]);
+export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "WRITING"]);
+// Suy nghĩ lại về voice có nên lm hay không ?.
+
 
 export const challenges = pgTable("challenges", {
     id: serial("id").primaryKey(),
@@ -122,7 +125,7 @@ export const challProgressRelations = relations(challProgress, ({ one }) => ({
 export const userProgress = pgTable("user_progress", {
     userId: text("user_id").primaryKey(),
     userName: text("user_name").notNull().default("User"),
-    userImageSrc: text("user_image_src").notNull().default("/mascot.png"),
+    userImageSrc: text("user_image_src").notNull().default("/anime-girl-reading.gif"),
     activeCourseId: integer("active_course_id").references(() => 
         courses.id, { onDelete: "cascade" }
     ),
@@ -137,3 +140,12 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
         references: [courses.id],
     })
 }));
+
+export const userSubscription = pgTable("user_subscription", {
+    id: serial("id").primaryKey(),
+    userId: text("user_id").notNull().unique(),
+    stripeCustomerId: text("stripe_customer_id").notNull().unique(),
+    stripeSubscriptionId: text("stripe_subscription_id").notNull().unique(),
+    stripePriceId: text("stripe_price_id").notNull(),
+    stripeCurrentPeriodEnd: timestamp("stripe_current_period_end").notNull(),
+})

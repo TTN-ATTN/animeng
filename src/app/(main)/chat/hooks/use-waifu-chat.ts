@@ -1,7 +1,5 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
-// Define API URL as a constant for easy configuration
 const API_URL = process.env.NEXT_PUBLIC_CHATBOT_API_URL || 'http://localhost:8000';
 
 // Types for chat messages and responses
@@ -9,8 +7,6 @@ export type ChatMessage = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp?: string;
-  // Add optional fields for new features
-  grammar_feedback?: { analysis: string } | null;
   simplified_response?: string | null;
 };
 
@@ -19,12 +15,8 @@ export type ChatResponse = {
   response: string;
   conversation_id: string;
   mood: string;
-  grammar_feedback?: { analysis: string } | null; // Matches backend Optional[Dict[str, Any]]
   simplified_response?: string | null;
 };
-
-// Difficulty levels type
-export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 
 // Main hook for chat functionality
 export const useWaifuChat = () => {
@@ -37,8 +29,6 @@ export const useWaifuChat = () => {
   const [apiAvailable, setApiAvailable] = useState(true);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
-  const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>('beginner'); // Added difficulty level state
-  const [latestGrammarFeedback, setLatestGrammarFeedback] = useState<{ analysis: string } | null>(null); // State for latest feedback
   const [latestSimplifiedResponse, setLatestSimplifiedResponse] = useState<string | null>(null); // State for latest simplified response
 
   // Check API health on mount
@@ -81,7 +71,7 @@ export const useWaifuChat = () => {
     const timer = setTimeout(() => {
       const greeting: ChatMessage = {
         role: 'assistant',
-        content: "Konnichiwa! I'm Sakura, your English learning companion! Ask me any questions about English grammar, vocabulary, or learning tips!",
+        content: "Konnichiwa! I'm Miku, your English learning companion! Ask me any questions about English grammar, vocabulary, or learning tips!",
         timestamp: new Date().toISOString(),
       };
       setMessages(prev => prev.length === 0 ? [greeting] : prev);
@@ -95,7 +85,6 @@ export const useWaifuChat = () => {
     
     setIsLoading(true);
     setError(null);
-    setLatestGrammarFeedback(null); // Clear previous feedback
     setLatestSimplifiedResponse(null); // Clear previous simplified response
     
     const userMessage: ChatMessage = {
@@ -117,7 +106,7 @@ export const useWaifuChat = () => {
           content: msg.content,
         }));
       
-      // Send request to API with difficulty level
+      // Send request to API
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: {
@@ -127,7 +116,6 @@ export const useWaifuChat = () => {
           message,
           conversation_id: conversationId,
           conversation_history: conversationHistory,
-          difficulty_level: difficultyLevel, // Include difficulty level
         }),
       });
       
@@ -137,8 +125,6 @@ export const useWaifuChat = () => {
           if (errorData.detail.includes("Model is still loading")) {
             setModelLoading(true);
             setError("The AI model is still loading. Please try again in a moment.");
-            // Don't retry automatically here, let user retry
-            // setTimeout(() => sendMessage(message), 5000);
             setIsLoading(false); // Stop loading indicator
             // Revert adding the user message if retry is not automatic
             setMessages(prev => prev.slice(0, -1));
@@ -158,8 +144,7 @@ export const useWaifuChat = () => {
       
       setMood(data.mood);
       
-      // Store feedback and simplified response
-      setLatestGrammarFeedback(data.grammar_feedback || null);
+      // Store simplified response
       setLatestSimplifiedResponse(data.simplified_response || null);
       
       // Add assistant message to chat
@@ -167,8 +152,7 @@ export const useWaifuChat = () => {
         role: 'assistant',
         content: data.response,
         timestamp: new Date().toISOString(),
-        // Optionally attach feedback/simplified directly to message if needed for display
-        grammar_feedback: data.grammar_feedback || null,
+        // Attach simplified response directly to message if needed for display
         simplified_response: data.simplified_response || null,
       };
       
@@ -186,7 +170,7 @@ export const useWaifuChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, conversationId, isLoading, difficultyLevel]); // Added difficultyLevel dependency
+  }, [messages, conversationId, isLoading]);
 
   // Reset conversation
   const resetConversation = useCallback(() => {
@@ -194,10 +178,7 @@ export const useWaifuChat = () => {
     setConversationId(null);
     setMood('default');
     setError(null);
-    setLatestGrammarFeedback(null);
     setLatestSimplifiedResponse(null);
-    // Keep difficulty level or reset it? Let's keep it for now.
-    // setDifficultyLevel('beginner'); 
     
     if (conversationId) {
       fetch(`${API_URL}/api/conversations/${conversationId}`, {
@@ -220,10 +201,6 @@ export const useWaifuChat = () => {
     apiAvailable,
     modelLoaded,
     modelLoading,
-    difficultyLevel, // Expose difficulty level state
-    setDifficultyLevel, // Expose setter for difficulty level
-    latestGrammarFeedback, // Expose latest feedback
     latestSimplifiedResponse, // Expose latest simplified response
   };
 };
-

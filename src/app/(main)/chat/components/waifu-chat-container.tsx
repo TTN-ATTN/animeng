@@ -4,25 +4,21 @@ import { useEffect, useRef, useState } from 'react';
 import WaifuCharacter from './waifu-character';
 import ChatMessages from './chat-messages';
 import ChatInput from './chat-input';
-import { useWaifuChat, DifficultyLevel } from '../hooks/use-waifu-chat'; // Import DifficultyLevel
+import { useWaifuChat } from '../hooks/use-waifu-chat';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Assuming shadcn/ui select
 
 const WaifuChatContainer = () => {
   const { 
     messages, 
     isLoading,
-    mood, // Use mood from hook
-    error, // Use error from hook
+    mood,
+    error,
     apiAvailable,
     modelLoaded,
     modelLoading,
     sendMessage,
     resetConversation,
-    difficultyLevel, // Get difficulty level state
-    setDifficultyLevel, // Get setter for difficulty level
-    latestGrammarFeedback, // Get latest feedback
-    latestSimplifiedResponse // Get latest simplified response
+    latestSimplifiedResponse
   } = useWaifuChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,15 +29,10 @@ const WaifuChatContainer = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle difficulty change
-  const handleDifficultyChange = (value: string) => {
-    setDifficultyLevel(value as DifficultyLevel);
-  };
-
   return (
-    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-200px)] bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-100px)] bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Waifu character section */}
-      <div className="w-full md:w-1/3 p-4 bg-pink-50 flex flex-col items-center justify-center relative">
+      <div className="w-full md:w-1/4 p-4 bg-teal-50 flex flex-col items-center justify-center relative">
         <WaifuCharacter mood={mood} />
         
         {/* Loading Indicator */}
@@ -52,7 +43,7 @@ const WaifuChatContainer = () => {
         )}
         {isLoading && !modelLoading && (
           <div className="mt-4 text-center">
-            <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-pink-300 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-teal-300 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
             <p className="mt-1 text-xs text-gray-600">Thinking...</p>
           </div>
         )}
@@ -92,21 +83,6 @@ const WaifuChatContainer = () => {
           <div className="mt-4 w-full bg-white p-3 rounded-md shadow-sm space-y-3">
             <h3 className="font-medium text-gray-700 mb-2 text-sm">Chat Options</h3>
             
-            {/* Difficulty Selector */}
-            <div>
-              <label htmlFor="difficulty-select" className="block text-xs font-medium text-gray-600 mb-1">Difficulty Level</label>
-              <Select value={difficultyLevel} onValueChange={handleDifficultyChange}>
-                <SelectTrigger id="difficulty-select" className="w-full h-9 text-xs">
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Reset Button */}
             <Button 
               variant="redBtn" 
@@ -121,8 +97,8 @@ const WaifuChatContainer = () => {
       </div>
       
       {/* Chat section */}
-      <div className="w-full md:w-2/3 flex flex-col h-full border-l border-gray-200">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="w-full md:w-3/4 flex flex-col h-full border-l border-gray-200">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* API Error Display */}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
@@ -134,8 +110,6 @@ const WaifuChatContainer = () => {
           <ChatMessages 
             messages={messages} 
             isTyping={isLoading && !modelLoading}
-            // Pass feedback and simplified response if needed directly here, 
-            // or handle within ChatMessages/MessageBubble based on message props
           />
           <div ref={messagesEndRef} />
         </div>
@@ -157,4 +131,3 @@ const WaifuChatContainer = () => {
 };
 
 export default WaifuChatContainer;
-

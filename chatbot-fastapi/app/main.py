@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Any
 import os
 import json
 import uuid
+import re
 from datetime import datetime
 import logging
 import time
@@ -12,13 +13,23 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from functools import lru_cache
 from pathlib import Path
+from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+from langdetect import detect, LangDetectException
+
+# Hugging Face token loading
+load_dotenv()  
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
+if hf_token:
+    print("INFO: Hugging Face token found!")
+else:
+    print("WARNING: Hugging Face token not found!")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- Custom Cache Logic Restored ---
-# Default cache directory (can be overridden by check_drive_available)
+# Default cache directory 
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "huggingface" / "hub"
 MODELS_DIR = DEFAULT_CACHE_DIR # Start with default
 
@@ -69,26 +80,10 @@ def check_and_set_cache_dir():
 
 # --- End Custom Cache Logic ---
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="English Learning Chatbot API",
-    description="API for English language learning chatbot using LLM",
-    version="2.1.1" # Incremented version
-)
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Model configuration
-MODEL_ID = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"  # Smaller model (~2GB)
-FALLBACK_MODEL_ID = "microsoft/phi-1_5"  # Fallback model (~3GB)
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  # Vietnamese-capable model
+FALLBACK_MODEL_ID = "google/gemma-2b-it"  # Fallback model
+DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 logger.info(f"Using device: {DEVICE}")
 
 # Global variables to store model and tokenizer
@@ -111,14 +106,21 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
     conversation_history: Optional[List[ChatHistory]] = None
-    difficulty_level: Optional[str] = "beginner"
 
 class ChatResponse(BaseModel):
     response: str
     conversation_id: str
     mood: str = "default"
-    grammar_feedback: Optional[Dict[str, Any]] = None
     simplified_response: Optional[str] = None
+
+def detect_language(text):
+    """Detect language of input text."""
+    try:
+        lang = detect(text)
+        return lang
+    except LangDetectException:
+        # Default to English if detection fails
+        return "en"
 
 # Model management functions
 def load_model_and_tokenizer(model_id=MODEL_ID):
@@ -132,23 +134,23 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
     model_error = None
     
     try:
-        # Ensure cache directory is determined before loading
-        # check_and_set_cache_dir() # This is called at startup now
         logger.info(f"Loading model {model_id} using cache: {MODELS_DIR}...")
         start_time = time.time()
-        
-        # Load tokenizer and model using the determined cache directory
+    
+        # Load tokenizer and model 
         tokenizer = AutoTokenizer.from_pretrained(
             model_id,
-            cache_dir=MODELS_DIR, # Use the globally set MODELS_DIR
+            cache_dir=MODELS_DIR,
+            token=hf_token,
             trust_remote_code=True
         )
         
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
-            cache_dir=MODELS_DIR, # Use the globally set MODELS_DIR
+            cache_dir=MODELS_DIR,
             device_map=DEVICE,
             torch_dtype="auto",
+            token=hf_token,
             trust_remote_code=True
         )
         
@@ -169,55 +171,76 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
             load_model_and_tokenizer(FALLBACK_MODEL_ID)
         else:
              # If fallback also fails or no fallback defined
-             model_loaded = False 
-             model_loading = False
+            model_loaded = False 
+            model_loading = False
         
     finally:
-        # Ensure loading is set to false if not attempting fallback
         if model_id != MODEL_ID or not FALLBACK_MODEL_ID:
              model_loading = False
 
-# --- Helper Functions (Format, Generate, Check, Simplify, Mood, Conversation) ---
-# (These functions remain largely the same as the user's provided version)
+def format_conversation(conversation_history, user_message):
+    """Format conversation for model input using appropriate chat template."""
+    global tokenizer, model_id_loaded
 
-def format_conversation(conversation_history, user_message, difficulty_level="beginner"):
-    """Format conversation for model input with difficulty level"""
-    system_prompt = f"""You are Sakura, a friendly AI English tutor for {difficulty_level} learners. 
-    - Use simple words and short sentences for beginners
-    - Explain grammar concepts clearly
-    - Provide examples and corrections
-    - Be patient and encouraging"""
+    if not tokenizer:
+        logger.error("Tokenizer not available for formatting conversation.")
+        # Fallback to a very basic format
+        return f"User: {user_message}\nAssistant:"
+
+    # Detect language of user message
+    lang = detect_language(user_message)
+    is_vietnamese = lang == "vi"
     
+    # Adjust system prompt based on detected language
+    if is_vietnamese:
+        system_prompt = """Bạn là Miku, một trợ lý AI thân thiện giúp học tiếng Anh.
+        - Chỉ trả lời câu hỏi được hỏi, không tạo ra các cuộc hội thoại giả định
+        - KHÔNG được tự đặt câu hỏi và tự trả lời
+        - Giải thích khái niệm ngữ pháp rõ ràng và ngắn gọn
+        - Cung cấp ví dụ và sửa lỗi khi cần thiết
+        - Trả lời bằng tiếng Việt khi được hỏi bằng tiếng Việt
+        - Sử dụng định dạng Markdown để làm nổi bật các phần quan trọng (như **từ này** cho in đậm)
+        - Trả lời trực tiếp và ngắn gọn, tránh dài dòng
+        - KHÔNG được tạo ra các cuộc đối thoại giả định giữa người dùng và trợ lý"""
+    else:
+        system_prompt = """You are Miku, a friendly AI English tutor.
+        - ONLY answer the question asked, do not create fictional dialogues
+        - DO NOT create hypothetical questions and answers
+        - Explain grammar concepts clearly and concisely
+        - Provide examples and corrections when needed
+        - Reply in English when asked in English
+        - Use Markdown formatting to highlight important parts (like **this word** for bold)
+        - Answer directly and concisely, avoid being verbose
+        - DO NOT create fictional dialogues between user and assistant"""
+
     messages = [{"role": "system", "content": system_prompt}]
-    
     if conversation_history:
-        messages.extend([{"role": msg.role, "content": msg.content} for msg in conversation_history])
-    
+        # Ensure history roles are 'user' or 'assistant'
+        messages.extend([
+            {"role": msg.role, "content": msg.content}
+            for msg in conversation_history
+            if msg.role in ["user", "assistant"]
+        ])
     messages.append({"role": "user", "content": user_message})
-    
-    # Format based on model type (assuming TinyLlama format)
-    if model_id_loaded and "llama" in model_id_loaded.lower():
+
+    try:
+        formatted_prompt = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        return formatted_prompt
+    except Exception as e:
+        logger.warning(f"Failed to apply chat template: {e}. Falling back to manual formatting.")
         formatted_prompt = ""
-        # Llama 2 chat format
-        for i, msg in enumerate(messages):
-            if msg["role"] == "system":
-                 # System prompt is handled differently in Llama 2
-                 # It's usually placed within the first user message's [INST]
-                 continue
-            elif msg["role"] == "user":
-                 if i == 1: # First user message includes system prompt
-                     formatted_prompt += f"<s>[INST] <<SYS>>\n{messages[0]['content']}\n<</SYS>>\n\n{msg['content']} [/INST]"
-                 else:
-                     formatted_prompt += f"<s>[INST] {msg['content']} [/INST]"
-            elif msg["role"] == "assistant":
-                 formatted_prompt += f" {msg['content']}</s>"
-    else: # Generic or other model format (like phi)
-        formatted_prompt = ""
+        if messages[0]["role"] == "system":
+             formatted_prompt += f"System: {messages[0]['content']}\n" # Include system prompt if possible
+             messages = messages[1:] # Remove system prompt for loop
+
         for msg in messages:
-            formatted_prompt += f"{msg['role'].capitalize()}: {msg['content']}\n"
-        formatted_prompt += "Assistant: "
-    
-    return formatted_prompt
+             formatted_prompt += f"{msg['role'].capitalize()}: {msg['content']}\n"
+        formatted_prompt += "Assistant:" # Prompt the model to respond
+        return formatted_prompt
 
 def generate_response(prompt, max_new_tokens=512):
     """Generate response using the loaded model"""
@@ -242,23 +265,42 @@ def generate_response(prompt, max_new_tokens=512):
     response = tokenizer.decode(response_ids, skip_special_tokens=True)
     return response.strip()
 
-def check_grammar(text):
-    """Simple grammar check using the model"""
-    # This might be too slow or unreliable with small models on CPU
-    # Consider using a dedicated grammar check library or API if performance is critical
-    prompt = f"""Check this English sentence for grammar mistakes and provide corrections in the format: Corrected: [corrected version] Explanation: [brief explanation]. Sentence: {text}"""
-    try:
-        # Use a smaller max_new_tokens for this specific task
-        return generate_response(prompt, max_new_tokens=128) 
-    except Exception as e:
-        logger.error(f"Grammar check failed: {e}")
-        return "Grammar check currently unavailable."
+def clean_response(response):
+    """Clean the response to remove hallucinated dialogues."""
+    # Remove any lines that look like "User:" or "Assistant:" or "Miku:"
+    cleaned = re.sub(r'(?i)(User|Assistant|Miku):\s*.*?(\n|$)', '', response)
+    
+    # Remove any lines that look like questions (ending with ?)
+    cleaned = re.sub(r'\n.*?\?\s*\n', '\n', cleaned)
+    
+    # Remove any lines that start with common dialogue patterns
+    dialogue_patterns = [
+        r'Let\'s try',
+        r'Let me ask',
+        r'Now, let\'s',
+        r'Hãy thử',
+        r'Bây giờ hãy',
+    ]
+    for pattern in dialogue_patterns:
+        cleaned = re.sub(f'{pattern}.*?(\n|$)', '', cleaned)
+    
+    # Clean up any extra newlines
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+    
+    return cleaned.strip()
 
-def simplify_text(text, level="beginner"):
-    """Simplify text for English learners"""
-    prompt = f"""Simplify this text for a {level} English learner: {text} Simplified:"""
+def simplify_text(text, lang="en"):
+    """Simplify text for language learners in the appropriate language"""
+    if lang == "vi":
+        prompt = f"""Đơn giản hóa đoạn văn này cho người học tiếng Anh. Chỉ trả lời bằng phiên bản đơn giản, không thêm bất kỳ nội dung nào khác: {text}"""
+    else:
+        prompt = f"""Simplify this text for an English learner. Only respond with the simplified version, do not add any other content: {text}"""
+    
     try:
-        return generate_response(prompt, max_new_tokens=256)
+        simplified = generate_response(prompt, max_new_tokens=256)
+        # Clean up the simplified response as well
+        simplified = clean_response(simplified)
+        return simplified
     except Exception as e:
         logger.error(f"Text simplification failed: {e}")
         return "Text simplification currently unavailable."
@@ -266,9 +308,21 @@ def simplify_text(text, level="beginner"):
 def detect_mood(response):
     """Detect mood from response text"""
     response_lower = response.lower()
-    positive_words = ["great", "excellent", "well done", "perfect", "amazing"]
-    negative_words = ["sorry", "incorrect", "wrong", "mistake"]
-    encouraging_words = ["try", "practice", "improve", "better"]
+    
+    # Vietnamese and English positive words
+    positive_words = ["great", "excellent", "well done", "perfect", "amazing", 
+                     "tuyệt vời", "xuất sắc", "làm tốt lắm", "hoàn hảo"]
+    
+    # Vietnamese and English negative words
+    negative_words = ["sorry", "incorrect", "wrong", "mistake", 
+                     "xin lỗi", "không đúng", "sai", "lỗi"]
+    
+    # Vietnamese and English encouraging words
+    encouraging_words = ["try", "practice", "improve", "better", 
+                        "cố gắng", "luyện tập", "cải thiện", "tốt hơn"]
+    
+    # Vietnamese and English goodbye words
+    goodbye_words = ["goodbye", "bye", "tạm biệt"]
     
     if any(word in response_lower for word in positive_words):
         return "excited"
@@ -276,7 +330,7 @@ def detect_mood(response):
         return "confused"
     elif any(word in response_lower for word in encouraging_words):
         return "happy"
-    elif "goodbye" in response_lower or "bye" in response_lower:
+    elif any(word in response_lower for word in goodbye_words):
         return "sad"
     return "default"
 
@@ -288,13 +342,12 @@ def get_or_create_conversation(conversation_id=None):
     new_id = str(uuid.uuid4())
     conversations[new_id] = {
         "created_at": datetime.now().isoformat(),
-        "messages": [],
-        "difficulty_level": "beginner"
+        "messages": []
     }
     return new_id
 
-def update_conversation(conversation_id, user_message, bot_response, difficulty_level):
-    """Update conversation history and difficulty level"""
+def update_conversation(conversation_id, user_message, bot_response):
+    """Update conversation history"""
     if conversation_id not in conversations:
         conversation_id = get_or_create_conversation(conversation_id)
     
@@ -302,24 +355,51 @@ def update_conversation(conversation_id, user_message, bot_response, difficulty_
         {"role": "user", "content": user_message, "timestamp": datetime.now().isoformat()},
         {"role": "assistant", "content": bot_response, "timestamp": datetime.now().isoformat()}
     ])
-    conversations[conversation_id]["difficulty_level"] = difficulty_level
     conversations[conversation_id]["messages"] = conversations[conversation_id]["messages"][-20:] # Keep last 20 messages
 
-# --- API Endpoints --- 
-@app.on_event("startup")
-async def startup_event():
-    """Check cache dir and start model loading on startup."""
-    check_and_set_cache_dir() # Determine cache location first
+# --- Lifespan Event Handler ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for application startup and shutdown."""
+    # Startup code (previously in @app.on_event("startup"))
+    if not hf_token and MODEL_ID in ["google/gemma-2b-it"]:
+        logger.warning("No Hugging Face token provided for gated model - loading may fail")
+
+    check_and_set_cache_dir()  # Determine cache location first
     background_tasks = BackgroundTasks()
     background_tasks.add_task(load_model_and_tokenizer)
     await background_tasks()
+    
+    # Yield control back to FastAPI
+    yield
+    
+    # Shutdown code (if needed in the future)
+    # Any cleanup code would go here
 
+# Initialize FastAPI app with lifespan handler
+app = FastAPI(
+    title="Multilingual Learning Chatbot API",
+    description="API for multilingual language learning chatbot using LLM",
+    version="2.4.0", # Updated for response cleaning and hallucination prevention
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- API Endpoints --- 
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint with model location info"""
     return {
         "status": "ok",
-        "version": "2.1.1",
+        "version": "2.4.0",
         "model_loaded": model_loaded,
         "model_loading": model_loading,
         "model_id": model_id_loaded if model_loaded else None,
@@ -330,7 +410,7 @@ async def health_check():
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """Enhanced chat endpoint with grammar checking and simplification"""
+    """Chat endpoint with language detection and simplified response"""
     if not model_loaded:
         if model_error:
             raise HTTPException(500, detail=f"Model failed to load: {model_error}")
@@ -339,39 +419,37 @@ async def chat(request: ChatRequest):
         raise HTTPException(500, detail="Model is not available")
 
     conversation_id = get_or_create_conversation(request.conversation_id)
-    difficulty_level = request.difficulty_level or conversations.get(conversation_id, {}).get("difficulty_level", "beginner")
 
     try:
+        # Detect language of user message
+        lang = detect_language(request.message)
+        logger.info(f"Detected language: {lang}")
+        
         prompt = format_conversation(
             request.conversation_history,
-            request.message,
-            difficulty_level
+            request.message
         )
         
-        response = generate_response(prompt)
+        raw_response = generate_response(prompt)
         
-        grammar_feedback_text = None
+        # Clean the response to remove hallucinated dialogues
+        response = clean_response(raw_response)
+        logger.info(f"Original response length: {len(raw_response)}, Cleaned response length: {len(response)}")
+        
         simplified_response = None
         
-        # Perform checks only if requested difficulty allows and model is capable
-        if difficulty_level in ["beginner", "intermediate"]:
-            # Run these potentially slow operations in background or handle errors gracefully
-            try:
-                simplified_response = simplify_text(response, difficulty_level)
-            except Exception as simplify_err:
-                logger.error(f"Error simplifying text: {simplify_err}")
-            try:
-                grammar_feedback_text = check_grammar(request.message)
-            except Exception as grammar_err:
-                 logger.error(f"Error checking grammar: {grammar_err}")
+        # Generate simplified response in the same language
+        try:
+            simplified_response = simplify_text(response, lang)
+        except Exception as simplify_err:
+            logger.error(f"Error simplifying text: {simplify_err}")
 
-        update_conversation(conversation_id, request.message, response, difficulty_level)
+        update_conversation(conversation_id, request.message, response)
         
         return ChatResponse(
             response=response,
             conversation_id=conversation_id,
             mood=detect_mood(response),
-            grammar_feedback={"analysis": grammar_feedback_text} if grammar_feedback_text else None,
             simplified_response=simplified_response
         )
         
@@ -397,6 +475,4 @@ async def delete_conversation(conversation_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use reload=False for production or when debugging model loading issues
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False) 
-
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

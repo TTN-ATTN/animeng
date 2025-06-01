@@ -23,10 +23,10 @@ export const Header = () => {
                         <Link href="/home">ANIMENG</Link>
                     </h1>
                 </div>
-                <ClerkLoading>
+                {/* <ClerkLoading>
                     <Loader className="h-5 w-5 text-muted-foreground animate-spin" size={32} />
-                </ClerkLoading>
-                <ClerkLoaded>
+                </ClerkLoading> */}
+                {/* <ClerkLoaded> */}
                     <SignedIn>
                         <UserButton />
                     </SignedIn>
@@ -35,7 +35,7 @@ export const Header = () => {
                             <Button variant="default" size="lg">Đăng nhập</Button>
                         </SignInButton>
                     </SignedOut>
-                </ClerkLoaded>
+                {/* </ClerkLoaded> */}
             </div>
         </header>
     );

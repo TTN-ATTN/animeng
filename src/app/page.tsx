@@ -24,10 +24,10 @@ const RootPage = () => {
                     <div className="flex flex-col items-center gap-y-8">
                         <h1 className="text-xl lg:text-3xl font-bold text-neutral-600 max-w-[480px] text-center">Học tiếng Anh thật dễ dàng và thú vị với ANIMENG!</h1>
                         <div className="flex flex-col gap-y-3 w-full max-w-[300px]">
-                            <ClerkLoading>
+                            {/* <ClerkLoading>
                                 <Loader className="h-5 w-5 text-muted-foreground animate-spin" size={32} />
-                            </ClerkLoading>
-                            <ClerkLoaded>
+                            </ClerkLoading> */}
+                            {/* <ClerkLoaded> */}
                                 <SignedIn>
                                     <Link href="/learning">
                                         <Button variant="greenBtn" size="lg" className="w-full">
@@ -43,7 +43,7 @@ const RootPage = () => {
                                         <Button variant="default" size="lg" className="w-full">Tôi đã có tài khoản</Button>
                                     </SignInButton>
                                 </SignedOut>
-                            </ClerkLoaded>
+                            {/* </ClerkLoaded> */}
                         </div>
                     </div>
             </main>

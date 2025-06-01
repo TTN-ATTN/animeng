@@ -1,13 +1,16 @@
-// import type { NextConfig } from "next";
-
-// const nextConfig: NextConfig = {
-  
-// };
-
-// module.exports = {
-//   eslint: {
-//     ignoreDuringBuilds: true,
-//   },
-// };
-
-// export default nextConfig;
+// next.config.js
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/(.*)', // áp dụng cho tất cả các đường dẫn
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'index, follow',
+          },
+        ],
+      },
+    ];
+  },
+};

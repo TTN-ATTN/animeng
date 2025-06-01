@@ -24,7 +24,7 @@ const AboutPage = () => {
                 {/* Section 1 */}
                 <section className="flex flex-col md:flex-row items-center gap-6">
                     <div className="md:w-1/3">
-                        <img src="/images/education.png" alt="Cá nhân hoá giáo dục" className="w-full max-w-xs mx-auto" />
+                        <img src="/1.jpeg" alt="Cá nhân hoá giáo dục" className="w-full max-w-xs mx-auto" />
                     </div>
                     <div className="md:w-2/3 space-y-2">
                         <h2 className="text-xl font-bold">Cá nhân hoá giáo dục</h2>
@@ -34,7 +34,7 @@ const AboutPage = () => {
                             dành riêng cho từng học viên.
                         </p>
                         <p>
-                            Mục tiêu lớn nhất của chúng tôi là làm cho người học trải nghiệm Duolingo như đang học với gia sư riêng.
+                            Mục tiêu lớn nhất của chúng tôi là làm cho người học trải nghiệm Animeng như đang học với gia sư riêng.
                         </p>
                     </div>
                 </section>
@@ -42,12 +42,12 @@ const AboutPage = () => {
                 {/* Section 2 */}
                 <section className="flex flex-col md:flex-row-reverse items-center gap-6">
                     <div className="md:w-1/3">
-                        <img src="/images/fun.png" alt="Làm cho việc học vui hơn" className="w-full max-w-xs mx-auto" />
+                        <img src="/2.jpeg" alt="Làm cho việc học vui hơn" className="w-full max-w-xs mx-auto" />
                     </div>
                     <div className="md:w-2/3 space-y-2">
                         <h2 className="text-xl font-bold">Làm cho việc học vui hơn.</h2>
                         <p>
-                            Học ngoại ngữ trực tuyến thường nhàm chán, nên chúng tôi tạo ra một ứng dụng thú vị là Duolingo để giúp
+                            Học ngoại ngữ trực tuyến thường nhàm chán, nên chúng tôi tạo ra một ứng dụng thú vị là Animeng để giúp
                             mọi người có động lực vừa chơi vừa học thêm kỹ năng mới mỗi ngày.
                         </p>
                     </div>
@@ -56,7 +56,7 @@ const AboutPage = () => {
                 {/* Section 3 */}
                 <section className="flex flex-col md:flex-row items-center gap-6">
                     <div className="md:w-1/3">
-                        <img src="/images/access.png" alt="Có thể tiếp cận từ khắp mọi nơi" className="w-full max-w-xs mx-auto" />
+                        <img src="/3.jpeg" alt="Có thể tiếp cận từ khắp mọi nơi" className="w-full max-w-xs mx-auto" />
                     </div>
                     <div className="md:w-2/3 space-y-2">
                         <h2 className="text-xl font-bold">Có thể tiếp cận từ khắp mọi nơi.</h2>
@@ -66,11 +66,11 @@ const AboutPage = () => {
                             không thể tiếp cận được.
                         </p>
                         <p>
-                            Chúng tôi tạo ra Duolingo để tất cả mọi người đều có thể được học ngoại ngữ miễn phí – hoàn toàn không
+                            Chúng tôi tạo ra Animeng để tất cả mọi người đều có thể được học ngoại ngữ miễn phí – hoàn toàn không
                             có chi phí ẩn hoặc nội dung phải trả tiền.
                         </p>
                         <p>
-                            Duolingo được sử dụng phổ biến, từ người giàu nhất thế giới, các diễn viên Hollywood đến những em học
+                            Animeng được sử dụng phổ biến, từ người giàu nhất thế giới, các diễn viên Hollywood đến những em học
                             sinh tại trường công ở các nước đang phát triển. Chúng tôi tin vào quyền bình đẳng, mọi người đều xứng
                             đáng có được một nền giáo dục chất lượng cao dù họ giàu hay nghèo.
                         </p>

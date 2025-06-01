@@ -1,8 +1,9 @@
 import { auth } from "@clerk/nextjs/server"
 
 const whitelist = [
-    "user_2uipkU6mEODowY2JJPwKnZ80r7j",
-]   
+    "user_...pCqHKs3E", // Your user ID here.
+    "user_2w7xQcYyBfgl0NRVg4w0ZrcWLjB"
+]
 
 export const getIsAdmin = async () => {
     const {userId} = await auth();

@@ -194,8 +194,8 @@ export const getUserSubscription = cache(async () => {
 
     if (!data) return null;
     const isActive = 
-        data.stripePriceId &&
-        data.stripeCurrentPeriodEnd?.getTime() + 1000 * 60 * 60 * 24 * 7 > Date.now();
+        data.momoPriceId &&
+        data.momoCurrentPeriodEnd?.getTime() + 1000 * 60 * 60 * 24 * 7 > Date.now();
     return {
         ...data,
         isActive: !!isActive,   

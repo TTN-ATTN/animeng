@@ -10,8 +10,7 @@ import { Quests } from "@/components/ui/quests";
 const ShopPage = async () => {
     const userProgressData = getUserProgress();
     const userSubscriptionData = getUserSubscription();
-
-
+    
     const  [ userProgress,
         userSubscription
      ] = await Promise.all([

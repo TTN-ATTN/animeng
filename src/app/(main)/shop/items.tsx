@@ -5,7 +5,7 @@ import Image from "next/image";
 import {Button} from "@/components/ui/button";
 import { useTransition } from "react";
 import { refillHearts } from "../../../../actions/user-progress";
-import { createStripeUrl } from "../../../../actions/user-subscription";
+import { createMomoUrl } from "../../../../actions/user-subscription";
 import { POINTS_TO_REFILL } from "../../../../constants";
 
 type Props = {
@@ -26,16 +26,21 @@ export const Items = ({hearts, points, hasSubscription}: Props) => {
     };
     const onUpgrade = () => {
         startTransition(() => {
-            createStripeUrl()
-            .then((response) => {
-                if (response.data) {
-                    window.location.href = response.data;
+            fetch('/api/momo', {
+                method: 'POST',
+            })
+            .then (async (res) => {
+                const data = await res.json();
+                if (data.payUrl) {
+                    window.location.href = data.payUrl;
+                }
+                else {
+                    toast.error("Payment Url not received");
                 }
             })
             .catch (() => toast.error("Something went wrong!"));
-            
-        });
-    };
+        })
+    }
     return (
         <ul  className = "w-full" >
             <div className = "flex items-center w-full p-4 gap-x-4 border-t-2">

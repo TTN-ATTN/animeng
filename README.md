@@ -7,7 +7,6 @@ English learning website for kids, inspired by Duolingo
 
 ```
 git clone https://github.com/TTN-ATTN/animeng.git
-cd animeng
 npm install
 ```
 
@@ -41,6 +40,9 @@ Access the website on your local machine: http://localhost:3000
 
 ## To access admin page
 
-Get userID from clerk
+Get userID from clerk and add to /lib/admin.ts
+
 ![alt text](image.jpg)
+
+
 

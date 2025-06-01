@@ -66,7 +66,7 @@ export const lessonsRelations = relations(lessons, ({many, one}) => ({
     challenges: many(challenges),
 }));
 
-export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "WRITING"]);
+export const challEnum =  pgEnum("type", ["CHOICE" ,"SPELLING", "VOICE", "WRITING"]);
 // Suy nghĩ lại về voice có nên lm hay không ?.
 
 
@@ -144,8 +144,8 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
 export const userSubscription = pgTable("user_subscription", {
     id: serial("id").primaryKey(),
     userId: text("user_id").notNull().unique(),
-    stripeCustomerId: text("stripe_customer_id").notNull().unique(),
-    stripeSubscriptionId: text("stripe_subscription_id").notNull().unique(),
-    stripePriceId: text("stripe_price_id").notNull(),
-    stripeCurrentPeriodEnd: timestamp("stripe_current_period_end").notNull(),
+    momoCustomerId: text("stripe_customer_id").notNull().unique(), // Change Stripe to momo relate partnercode
+    momoSubscriptionId: text("stripe_subscription_id").notNull().unique(), // Change Stripe to momo 
+    momoPriceId: text("stripe_price_id").notNull(), 
+    momoCurrentPeriodEnd: timestamp("stripe_current_period_end").notNull(),
 })

@@ -1,8 +1,17 @@
 import { Header } from "./header";
 import { Footer } from "./footer";
+import { Metadata } from "next";
 
 type Props = {
   children: React.ReactNode;
+};
+
+export const metadata: Metadata = {
+  title: "Home - ANIMENG",
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 const HomeLayout = ({ children }: Props) => {

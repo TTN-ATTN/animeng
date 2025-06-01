@@ -9,22 +9,25 @@ export async function POST(req: NextRequest) {
   const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz"
   const partnerCode = 'MOMO'
   const orderInfo = 'Pay with MoMo'
-  const redirectUrl = 'https://3dbb-14-169-236-27.ngrok-free.app/shop'
-  const ipnUrl = 'https://3dbb-14-169-236-27.ngrok-free.app/api/callback'
+  const redirectUrl = `${process.env.PUBLIC_URL}/shop`
+  const ipnUrl = `${process.env.PUBLIC_URL}/api/callback`
   const amount = '50000'
   const requestType = 'payWithMethod'
-  const extraData = ''
+  
   const autoCapture = true
   const lang = 'vi'
 
   const timestamp = Date.now()
   const orderId = partnerCode + timestamp
   const requestId = orderId
+  
+  const {userId} = await auth();
+  const extraData =  userId ? `userId=${encodeURIComponent(userId)}` : ''
 
   const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`
   const signature = crypto.createHmac('sha256', secretKey).update(rawSignature).digest('hex')
 
-  const {userId} = await auth();
+  console.log('User ID:', userId)
 
   const body = JSON.stringify({
     partnerCode,
@@ -39,7 +42,7 @@ export async function POST(req: NextRequest) {
     lang,
     requestType,
     autoCapture,
-    extraData: userId,
+    extraData,
     signature,
   })
 

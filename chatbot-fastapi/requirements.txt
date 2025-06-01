@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+scikit-learn
+python-dotenv
+transformers
+torch
+sentencepiece
+accelerate
+bitsandbytes

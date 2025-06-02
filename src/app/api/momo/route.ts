@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const requestId = orderId
   
   const {userId} = await auth();
-  const extraData =  userId ? `userId=${encodeURIComponent(userId)}` : ''
+  const extraData =  userId ? `${encodeURIComponent(userId)}` : ''
 
   const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`
   const signature = crypto.createHmac('sha256', secretKey).update(rawSignature).digest('hex')

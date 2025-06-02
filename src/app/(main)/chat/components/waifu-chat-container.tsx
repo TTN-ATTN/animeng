@@ -18,7 +18,6 @@ const WaifuChatContainer = () => {
     modelLoading,
     sendMessage,
     resetConversation,
-    latestSimplifiedResponse
   } = useWaifuChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -10,14 +10,12 @@ from datetime import datetime
 import logging
 import time
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig # Added BitsAndBytesConfig
 from functools import lru_cache
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from langdetect import detect, LangDetectException
-
-# RAG Imports
 from rag_utils import build_or_load_vector_store, get_retriever, EMBEDDING_MODEL_NAME
 from langchain_core.vectorstores import VectorStoreRetriever
 
@@ -86,11 +84,9 @@ def check_and_set_cache_dir():
         os.environ["HF_DATASETS_CACHE"] = str(MODELS_DIR / "datasets")
         os.environ["TORCH_HOME"] = str(MODELS_DIR / "torch")
 
-# --- End Custom Cache Logic ---
-
 # Model configuration
-FALLBACK_MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  # Vietnamese-capable model
-MODEL_ID = "google/gemma-2b-it"  # Fallback model
+FALLBACK_MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  
+MODEL_ID = "google/gemma-2b-it"  
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 logger.info(f"Using device: {DEVICE}")
 
@@ -105,22 +101,11 @@ rag_retriever: Optional[VectorStoreRetriever] = None
 rag_ready = False
 rag_error = None
 
-# In-memory conversation store
-conversations = {}
-
-# Pydantic models for request and response
-class ChatHistory(BaseModel):
-    role: str
-    content: str
-
 class ChatRequest(BaseModel):
     message: str
-    conversation_id: Optional[str] = None
-    conversation_history: Optional[List[ChatHistory]] = None
 
 class ChatResponse(BaseModel):
     response: str
-    conversation_id: str
     mood: str = "default"
     retrieved_context: Optional[List[Dict[str, Any]]] = None  # Added for RAG context info
 
@@ -156,11 +141,12 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
             trust_remote_code=True
         )
         
+        # Optimization: Load model with 4-bit quantization
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             cache_dir=MODELS_DIR,
             device_map=DEVICE,
-            torch_dtype="auto",
+            torch_dtype="auto", # Let transformers handle dtype selection with quantization
             token=hf_token,
             trust_remote_code=True
         )
@@ -223,8 +209,8 @@ def truncate_rag_docs(docs, max_length=MAX_RAG_DOC_LENGTH):
     
     return docs
 
-def format_conversation(conversation_history, user_message, retrieved_docs=None):
-    """Format conversation for model input using appropriate chat template."""
+def format_conversation(user_message, retrieved_docs=None):
+    """Format conversation for model input using appropriate chat template (history removed)."""
     global tokenizer, model_id_loaded
 
     if not tokenizer:
@@ -270,13 +256,6 @@ def format_conversation(conversation_history, user_message, retrieved_docs=None)
             system_prompt += f"\n\nUse the following information from the website to answer the user's question if relevant:\n---BEGIN CONTEXT---\n{context_str}\n---END CONTEXT---"
 
     messages = [{"role": "system", "content": system_prompt}]
-    if conversation_history:
-        # Ensure history roles are 'user' or 'assistant'
-        messages.extend([
-            {"role": msg.role, "content": msg.content}
-            for msg in conversation_history
-            if msg.role in ["user", "assistant"]
-        ])
     messages.append({"role": "user", "content": user_message})
 
     try:
@@ -326,10 +305,6 @@ def clean_response(response):
     # Remove any lines that look like "User:" or "Assistant:" or "Miku:"
     cleaned = re.sub(r'(?i)(User|Assistant|Miku):\s*.*?(\n|$)', '', response)
     
-    # Remove any lines that look like questions (ending with ?)
-    cleaned = re.sub(r'\n.*?\?\s*\n', '\n', cleaned)
-    
-    # Remove any lines that start with common dialogue patterns
     dialogue_patterns = [
         r'Let\'s try',
         r'Let me ask',
@@ -373,29 +348,6 @@ def detect_mood(response):
     elif any(word in response_lower for word in goodbye_words):
         return "sad"
     return "default"
-
-def get_or_create_conversation(conversation_id=None):
-    """Get or create conversation"""
-    if conversation_id and conversation_id in conversations:
-        return conversation_id
-    
-    new_id = str(uuid.uuid4())
-    conversations[new_id] = {
-        "created_at": datetime.now().isoformat(),
-        "messages": []
-    }
-    return new_id
-
-def update_conversation(conversation_id, user_message, bot_response):
-    """Update conversation history"""
-    if conversation_id not in conversations:
-        conversation_id = get_or_create_conversation(conversation_id)
-    
-    conversations[conversation_id]["messages"].extend([
-        {"role": "user", "content": user_message, "timestamp": datetime.now().isoformat()},
-        {"role": "assistant", "content": bot_response, "timestamp": datetime.now().isoformat()}
-    ])
-    conversations[conversation_id]["messages"] = conversations[conversation_id]["messages"][-20:] # Keep last 20 messages
 
 # --- Lifespan Event Handler ---
 @asynccontextmanager
@@ -454,7 +406,6 @@ async def health_check():
         "device": DEVICE,
         "model_location": str(MODELS_DIR),
         "embedding_model": EMBEDDING_MODEL_NAME,
-        "active_conversations": len(conversations)
     }
 
 @app.post("/api/chat")
@@ -469,25 +420,12 @@ async def chat(request: ChatRequest):
         else:
             raise HTTPException(status_code=500, detail=f"Model failed to load: {model_error}")
     
-    # Get or create conversation
-    conversation_id = get_or_create_conversation(request.conversation_id)
-    
-    # Get conversation history
-    history = []
-    if request.conversation_history:
-        history = request.conversation_history
-    
-    # Detect language
-    lang = detect_language(request.message)
-    
-    # Get relevant documents from RAG if available
     retrieved_docs = []
     retrieved_context_info = []
     
     if rag_ready and rag_retriever:
         try:
             retrieved_docs = rag_retriever.invoke(request.message)
-            # Create context info for response
             for doc in retrieved_docs:
                 source = doc.metadata.get("source", "Unknown")
                 preview = doc.page_content[:100] + "..." if len(doc.page_content) > 100 else doc.page_content
@@ -498,10 +436,8 @@ async def chat(request: ChatRequest):
         except Exception as e:
             logger.error(f"Error retrieving documents: {str(e)}")
     
-    # Format conversation with retrieved context
-    prompt = format_conversation(history, request.message, retrieved_docs)
+    prompt = format_conversation(request.message, retrieved_docs)
     
-    # Generate response
     try:
         response = generate_response(prompt)
         cleaned_response = clean_response(response)
@@ -511,66 +447,15 @@ async def chat(request: ChatRequest):
     
     # Detect mood
     mood = detect_mood(cleaned_response)
-    
-    # Update conversation history
-    update_conversation(conversation_id, request.message, cleaned_response)
-    
-    # Return response
+    if not mood:
+        mood = "default"    
+
     return ChatResponse(
         response=cleaned_response,
-        conversation_id=conversation_id,
         mood=mood,
         retrieved_context=retrieved_context_info if retrieved_context_info else None
     )
 
-@app.get("/api/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str):
-    """Get conversation history"""
-    if conversation_id not in conversations:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    
-    return conversations[conversation_id]
-
-@app.delete("/api/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
-    """Delete conversation"""
-    if conversation_id in conversations:
-        del conversations[conversation_id]
-    
-    return {"status": "ok"}
-
-# RAG management endpoints
-@app.post("/api/rag/rebuild")
-async def rebuild_rag():
-    """Force rebuild the RAG vector store"""
-    global rag_retriever, rag_ready, rag_error
-    
-    try:
-        from rag_utils import rebuild_vector_store
-        
-        logger.info("Rebuilding RAG vector store...")
-        vector_store = rebuild_vector_store(device=DEVICE)
-        
-        if vector_store:
-            rag_retriever = get_retriever(vector_store)
-            if rag_retriever:
-                rag_ready = True
-                logger.info("RAG retriever rebuilt successfully.")
-                return {"status": "success", "message": "RAG vector store rebuilt successfully"}
-            else:
-                rag_error = "Failed to create retriever from rebuilt vector store."
-                logger.error(rag_error)
-                return {"status": "error", "message": rag_error}
-        else:
-            rag_error = "Failed to rebuild vector store."
-            logger.error(rag_error)
-            return {"status": "error", "message": rag_error}
-    except Exception as e:
-        rag_error = f"Error rebuilding RAG: {str(e)}"
-        logger.error(rag_error)
-        return {"status": "error", "message": rag_error}
-
-# Run the app
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

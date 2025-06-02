@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 # Configuration
 # Use a multilingual model suitable for both English and Vietnamese
 EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-VECTOR_STORE_PATH = "faiss_vector_store"
+VECTOR_STORE_PATH = "animeng\\chatbot-fastapi\\app\\faiss_vector_store"
 SOURCE_DIRECTORY = "D:\\UNI\\web\\project\\animeng\\chatbot-fastapi\\documents" 
 
 # Define file types to load from the source directory
@@ -28,7 +28,6 @@ CHUNK_OVERLAP = 150
 def get_file_loader(file_path):
     """Determine the appropriate loader based on file type."""
     try:
-        mime_type, _ = mimetypes.guess_type(file_path)
         text_extensions = ['.tsx', '.ts', '.js', '.jsx', '.md', '.json', '.html', '.css', '.txt', '.py']
         if any(file_path.lower().endswith(ext) for ext in text_extensions):
             return TextLoader(file_path, encoding='utf-8')
@@ -140,7 +139,6 @@ def create_vector_store(chunks: list[Document], embeddings, store_path: str):
     logger.info(f"Creating FAISS vector store at: {store_path}")
     try:
         vector_store = FAISS.from_documents(chunks, embeddings)
-        # Ensure directory exists
         os.makedirs(store_path, exist_ok=True)
         vector_store.save_local(store_path)
         logger.info(f"FAISS vector store created and saved.")
@@ -226,7 +224,6 @@ def rebuild_vector_store(device="cpu"):
     delete_vector_store(VECTOR_STORE_PATH)
     return build_or_load_vector_store(device)
 
-# Example usage (for testing or initial build)
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()

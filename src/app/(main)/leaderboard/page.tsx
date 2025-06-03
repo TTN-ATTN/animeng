@@ -10,6 +10,7 @@ import { AvatarImage } from "@radix-ui/react-avatar";
 import { Promo } from "@/components/ui/promo";
 import { Quests } from "@/components/ui/quests";
 
+export const dynamic = "force-dynamic"; // Force dynamic rendering
 
 const LeaderBoard = async () => {
     const userProgressData = getUserProgress();
@@ -35,13 +36,13 @@ const LeaderBoard = async () => {
             <StickyWrapper>
                 <UserProgress
                 activeCourse={userProgress.activeCourse}
-                hearts = {userProgress.hearts}
-                points = {userProgress.points}
+                hearts = {userProgress.hearts ?? 0}
+                points = {userProgress.points ?? 0}
                 hasSubscription = {!!userSubscription?.isActive}/>
                 {!isPro && (
                     <Promo />
                 )}   
-                <Quests points={userProgress.points}/>
+                <Quests points={userProgress.points ?? 0}/>
             </StickyWrapper>
             <FeedWrapper>
                 <div className = "w-full flex flex-col items-center">

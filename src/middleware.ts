@@ -1,17 +1,33 @@
-// Backend middleware: xử lý route authentication
-import { clerkMiddleware, createRouteMatcher} from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Thêm route phải đăng nhập mới được phép truy cập
-const isProtectedRoute = createRouteMatcher(['/learning(.*)','/shop(.*)','/quests(.*)','/leaderboard(.*)'])
-export default clerkMiddleware(async (auth, req) => {
-  console.log(`Request received: ${req.url}`);
-  if (isProtectedRoute(req)) await auth.protect() 
-})
+// Middleware is no longer used for NextAuth authentication due to Edge Runtime limitations.
+// Authentication checks will be handled in Server Components (layouts/pages).
+// This middleware can be used for other purposes like setting headers, redirects (non-auth related), etc.
 
+export function middleware(request: NextRequest) {
+  // Example: Add a custom header
+  // const requestHeaders = new Headers(request.headers);
+  // requestHeaders.set('x-custom-header', 'my-custom-value');
+  // return NextResponse.next({
+  //   request: {
+  //     headers: requestHeaders,
+  //   },
+  // });
+
+  // Default behavior: pass through
+  return NextResponse.next();
+}
+
+// The matcher remains the same, applying the middleware to relevant paths.
 export const config = {
-    matcher: [
-        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        '/(api|trpc)(.*)',
-        '/',
-    ],
+  matcher: [
+    // Exclude files with extensions like .html, .css, .js, images, etc.
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Include API routes and TRPC routes
+    '/(api|trpc)(.*)',
+    // Include the root path
+    '/',
+  ],
 };
+

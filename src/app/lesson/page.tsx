@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getLesson, getUserProgress, getUserSubscription} from "../../../db/queries";
 import { Quiz } from "./quiz";
 
+export const dynamic = "force-dynamic"; // Force dynamic rendering
+
 const LesssonPage = async () => {
     const lessonData = await getLesson();
     const userProgressData = await getUserProgress();
@@ -22,7 +24,7 @@ const LesssonPage = async () => {
         <Quiz 
             lessonId = {lesson.id}
             lessonChallenges = {lesson.challenges}
-            hearts = {userProgress.hearts}
+            hearts = {userProgress.hearts ?? 0}
             percent = {percent}
             subscription = {userSubscription}    
         >

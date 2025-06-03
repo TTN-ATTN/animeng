@@ -1,19 +1,20 @@
 /*
-    Route: /home
-    Phải đặt tên là page.tsx để Next.js hiểu đây là 1 trang component
+    Route: /about
+    Static page providing information about the application.
 */
 import Image from "next/image";
-import {
-    ClerkLoading,
-    ClerkLoaded,
-    SignedIn,
-    SignedOut,
-    SignUpButton,
-    SignInButton
-} from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { Loader } from "lucide-react";
-import Link from "next/link";
+// Removed unused Clerk imports
+// import {
+//     ClerkLoading,
+//     ClerkLoaded,
+//     SignedIn,
+//     SignedOut,
+//     SignUpButton,
+//     SignInButton
+// } from "@clerk/nextjs";
+// import { Button } from "@/components/ui/button";
+// import { Loader } from "lucide-react";
+// import Link from "next/link";
 
 const AboutPage = () => {
     return (

@@ -9,9 +9,65 @@ import {
     pgEnum,
     pgTable,
     serial,
-    text, 
+    text,
     timestamp,
+    primaryKey,
 } from "drizzle-orm/pg-core";
+import type { AdapterAccount } from "@auth/core/adapters";
+
+// --- NextAuth Tables ---
+
+export const users = pgTable("users", {
+    id: text("id").notNull().primaryKey(),
+    name: text("name"),
+    email: text("email").notNull(),
+    emailVerified: timestamp("emailVerified", { mode: "date" }),
+    image: text("image"),
+});
+
+export const accounts = pgTable(
+    "accounts",
+    {
+        userId: text("userId")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        type: text("type").$type<AdapterAccount["type"]>().notNull(),
+        provider: text("provider").notNull(),
+        providerAccountId: text("providerAccountId").notNull(),
+        refresh_token: text("refresh_token"),
+        access_token: text("access_token"),
+        expires_at: integer("expires_at"),
+        token_type: text("token_type"),
+        scope: text("scope"),
+        id_token: text("id_token"),
+        session_state: text("session_state"),
+    },
+    (account) => [
+        primaryKey({ columns: [account.provider, account.providerAccountId] }),
+    ]
+);
+
+export const sessions = pgTable("sessions", {
+    sessionToken: text("sessionToken").notNull().primaryKey(),
+    userId: text("userId")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+    "verificationTokens",
+    {
+        identifier: text("identifier").notNull(),
+        token: text("token").notNull(),
+        expires: timestamp("expires", { mode: "date" }).notNull(),
+    },
+    (vt) => ({
+        compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+    })
+);
+
+// --- Application Tables (Modified for NextAuth) ---
 
 // Định nghĩa bảng "courses" chứa thông tin các khóa học
 export const courses = pgTable("courses", {
@@ -22,28 +78,28 @@ export const courses = pgTable("courses", {
 
 // Định nghĩa quan hệ của bảng "courses"
 export const coursesRelations = relations(courses, ({ many }) => ({
-    userProgress: many(userProgress), 
+    userProgress: many(userProgress),
     units: many(units),
 }));
 
 // Định nghĩa bảng units
 export const units = pgTable("units", {
-    id: serial("id").primaryKey(), 
-    title: text("title").notNull(), 
+    id: serial("id").primaryKey(),
+    title: text("title").notNull(),
     description: text("description").notNull(),
-    courseId: integer("course_id").references(() => 
-        courses.id, { onDelete: "cascade" } 
+    courseId: integer("course_id").references(() =>
+        courses.id, { onDelete: "cascade" }
     ).notNull(),
-    order: integer("order").notNull(), 
+    order: integer("order").notNull(),
 });
 
 // Định nghĩa quan hệ của bảng "units", nhiều unit thuộc về một khóa học, một unit có nhiều bài học
 export const unitsRelations = relations(units, ({many, one }) => ({
     course: one(courses, {
         fields: [units.courseId],
-        references: [courses.id], 
+        references: [courses.id],
     }),
-    lessons: many(lessons), 
+    lessons: many(lessons),
 }));
 
 // Định nghĩa bảng lessons
@@ -51,17 +107,17 @@ export const lessons = pgTable("lessons", {
     id: serial("id").primaryKey(),
     title: text("title").notNull(),
     description: text("description").notNull(),
-    unitId: integer("unit_id").references(() => 
+    unitId: integer("unit_id").references(() =>
         units.id, { onDelete: "cascade" }
     ).notNull(),
     order: integer("order").notNull(),
 });
 
-// Định nghĩa quan hệ của bảng "lessons", nhiều bài học thuộc về một unit, một bài học có nhiều thử thách 
+// Định nghĩa quan hệ của bảng "lessons", nhiều bài học thuộc về một unit, một bài học có nhiều thử thách
 export const lessonsRelations = relations(lessons, ({many, one}) => ({
     unit: one(units, {
         fields: [lessons.unitId],
-        references: [units.id], 
+        references: [units.id],
     }),
     challenges: many(challenges),
 }));
@@ -93,13 +149,13 @@ export const challOptions = pgTable("challOptions", {
     challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }).notNull(),
     text: text("text").notNull(),
     correct: boolean("correct").notNull().default(false),
-    imageSrc: text("image_src"), 
+    imageSrc: text("image_src"),
     audioSrc: text("audio_src"),
 });
 
-// Định nghĩa quan hệ của bảng chứa các tùy chọn cho thử thách, một tùy chọn thuộc về một thử thách duy nhất 
+// Định nghĩa quan hệ của bảng chứa các tùy chọn cho thử thách, một tùy chọn thuộc về một thử thách duy nhất
 export const challOptionsRelations = relations(challOptions,({one})=>({
-    challenges: one(challenges, {
+    challenge: one(challenges, {
         fields: [challOptions.challengeId],
         references: [challenges.id],
     }),
@@ -108,7 +164,8 @@ export const challOptionsRelations = relations(challOptions,({one})=>({
 // Định nghĩa bảng lưu tiến trình của người dùng trong các thử thách
 export const challProgress = pgTable("challProgress", {
     id: serial("id").primaryKey(),
-    userId: text("user_id").notNull(),
+    // userId: text("user_id").notNull(), // Old Clerk ID
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }), // New NextAuth ID
     challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }).notNull(),
     completed: boolean("completed").notNull().default(false),
 });
@@ -119,14 +176,19 @@ export const challProgressRelations = relations(challProgress, ({ one }) => ({
         fields: [challProgress.challengeId],
         references: [challenges.id],
     }),
+    user: one(users, {
+        fields: [challProgress.userId],
+        references: [users.id],
+    }),
 }));
 
 // Định nghĩa bảng "user_progress" lưu tiến trình của người dùng
 export const userProgress = pgTable("user_progress", {
-    userId: text("user_id").primaryKey(),
-    userName: text("user_name").notNull().default("User"),
-    userImageSrc: text("user_image_src").notNull().default("/anime-girl-reading.gif"),
-    activeCourseId: integer("active_course_id").references(() => 
+    // userId: text("user_id").primaryKey(), // Old Clerk ID as PK
+    userId: text("user_id").notNull().primaryKey().references(() => users.id, { onDelete: "cascade" }), // New NextAuth ID as PK & FK
+    // userName: text("user_name").notNull().default("User"), // Removed, use users.name
+    // userImageSrc: text("user_image_src").notNull().default("/anime-girl-reading.gif"), // Removed, use users.image
+    activeCourseId: integer("active_course_id").references(() =>
         courses.id, { onDelete: "cascade" }
     ),
     hearts: integer("hearts").notNull().default(5),
@@ -138,14 +200,37 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
     activeCourse: one(courses, {
         fields: [userProgress.activeCourseId],
         references: [courses.id],
-    })
+    }),
+    user: one(users, {
+        fields: [userProgress.userId],
+        references: [users.id],
+    }),
 }));
 
 export const userSubscription = pgTable("user_subscription", {
     id: serial("id").primaryKey(),
-    userId: text("user_id").notNull().unique(),
+    // userId: text("user_id").notNull().unique(), // Old Clerk ID
+    userId: text("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }), // New NextAuth ID
     momoCustomerId: text("stripe_customer_id").notNull().unique(), // Change Stripe to momo relate partnercode
-    momoSubscriptionId: text("stripe_subscription_id").notNull().unique(), // Change Stripe to momo 
-    momoPriceId: text("stripe_price_id").notNull(), 
+    momoSubscriptionId: text("stripe_subscription_id").notNull().unique(), // Change Stripe to momo
+    momoPriceId: text("stripe_price_id").notNull(),
     momoCurrentPeriodEnd: timestamp("stripe_current_period_end").notNull(),
-})
+});
+
+// Add relation for userSubscription to user
+export const userSubscriptionRelations = relations(userSubscription, ({ one }) => ({
+    user: one(users, {
+        fields: [userSubscription.userId],
+        references: [users.id],
+    }),
+}));
+
+// Add relations for users table
+export const usersRelations = relations(users, ({ many }) => ({
+	accounts: many(accounts),
+	sessions: many(sessions),
+    userProgress: many(userProgress),
+    challProgress: many(challProgress),
+    userSubscription: many(userSubscription),
+}));
+

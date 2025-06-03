@@ -38,8 +38,6 @@ export const upsertUserProgress = async (courseId: number) => {
     if (existingUserProgress) {
         await db.update(userProgress).set({
             activeCourseId: courseId,
-            userName: user.firstName || "User",
-            userImageSrc: user.imageUrl || "/mascot.svg",
         });
         revalidatePath("/courses");
         revalidatePath("/learning");
@@ -48,9 +46,7 @@ export const upsertUserProgress = async (courseId: number) => {
 
     await db.insert(userProgress).values({
         userId,
-        activeCourseId: courseId,
-        userName: user.firstName || "User",
-        userImageSrc: user.imageUrl || "/mascot.svg"
+        activeCourseId: courseId
     });
     
 
@@ -108,7 +104,7 @@ export const reduceHearts = async (challengeId : number) => {
     }
 
     await db.update(userProgress).set({
-        hearts: Math.max(currentUserProgress.hearts - 1, 0),
+        hearts: Math.max((currentUserProgress.hearts ?? 0) - 1, 0),
     }).where(eq(userProgress.userId,userId))
 
     revalidatePath("/shop");
@@ -126,12 +122,15 @@ export const refillHearts =  async() =>{
     {
         throw new Error("user progress not found");
     }
-    if (currentUserProgress.hearts  === 5)
+    if (!currentUserProgress.userId) {
+         throw new Error("User ID not found in user progress data.");
+    }
+    if ((currentUserProgress.hearts ?? 0)  === 5)
     {
         throw new Error("Hearts are already full")
     }
 
-    if (currentUserProgress.points < POINTS_TO_REFILL)
+    if ((currentUserProgress.points ?? 0) < POINTS_TO_REFILL)
     {
         throw new Error("Not enough points");
     }
@@ -139,7 +138,7 @@ export const refillHearts =  async() =>{
     await db.update(userProgress).set({
 
         hearts: 5,
-        points: currentUserProgress.points - POINTS_TO_REFILL,
+        points: (currentUserProgress.points ?? 0) - POINTS_TO_REFILL,
     }).where (eq(userProgress.userId,currentUserProgress.userId));
     revalidatePath("/shop");
     revalidatePath("/learning");

@@ -1,5 +1,7 @@
 import WaifuChatContainer from './components/waifu-chat-container';
 
+export const dynamic = "force-dynamic";
+
 const ChatPage = async () => {
     return (
         <div className="h-full max-w-[912px] mx-auto px-3">
@@ -10,3 +12,4 @@ const ChatPage = async () => {
 }
 
 export default ChatPage;
+

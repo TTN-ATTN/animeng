@@ -10,12 +10,14 @@ from datetime import datetime
 import logging
 import time
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig # Added BitsAndBytesConfig
 from functools import lru_cache
 from pathlib import Path
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from langdetect import detect, LangDetectException
+from rag_utils import build_or_load_vector_store, get_retriever, EMBEDDING_MODEL_NAME
+from langchain_core.vectorstores import VectorStoreRetriever
 
 # Hugging Face token loading
 load_dotenv()  
@@ -32,6 +34,10 @@ logger = logging.getLogger(__name__)
 # Default cache directory 
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "huggingface" / "hub"
 MODELS_DIR = DEFAULT_CACHE_DIR # Start with default
+
+# RAG configuration
+MAX_RAG_DOCS = 3
+MAX_RAG_DOC_LENGTH = 500
 
 def check_and_set_cache_dir():
     """Check if E: drive is available and set cache directory accordingly."""
@@ -78,40 +84,30 @@ def check_and_set_cache_dir():
         os.environ["HF_DATASETS_CACHE"] = str(MODELS_DIR / "datasets")
         os.environ["TORCH_HOME"] = str(MODELS_DIR / "torch")
 
-# --- End Custom Cache Logic ---
-
 # Model configuration
-MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  # Vietnamese-capable model
-FALLBACK_MODEL_ID = "google/gemma-2b-it"  # Fallback model
+FALLBACK_MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  
+MODEL_ID = "google/gemma-2b-it"  
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 logger.info(f"Using device: {DEVICE}")
 
-# Global variables to store model and tokenizer
+# Global variables to store model, tokenizer, and RAG retriever
 model = None
 tokenizer = None
 model_loading = False
 model_loaded = False
 model_error = None
 model_id_loaded = None
-
-# In-memory conversation store
-conversations = {}
-
-# Pydantic models for request and response
-class ChatHistory(BaseModel):
-    role: str
-    content: str
+rag_retriever: Optional[VectorStoreRetriever] = None
+rag_ready = False
+rag_error = None
 
 class ChatRequest(BaseModel):
     message: str
-    conversation_id: Optional[str] = None
-    conversation_history: Optional[List[ChatHistory]] = None
 
 class ChatResponse(BaseModel):
     response: str
-    conversation_id: str
     mood: str = "default"
-    simplified_response: Optional[str] = None
+    retrieved_context: Optional[List[Dict[str, Any]]] = None  # Added for RAG context info
 
 def detect_language(text):
     """Detect language of input text."""
@@ -145,11 +141,12 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
             trust_remote_code=True
         )
         
+        # Optimization: Load model with 4-bit quantization
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             cache_dir=MODELS_DIR,
             device_map=DEVICE,
-            torch_dtype="auto",
+            torch_dtype="auto", # Let transformers handle dtype selection with quantization
             token=hf_token,
             trust_remote_code=True
         )
@@ -178,8 +175,42 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
         if model_id != MODEL_ID or not FALLBACK_MODEL_ID:
              model_loading = False
 
-def format_conversation(conversation_history, user_message):
-    """Format conversation for model input using appropriate chat template."""
+def load_rag_retriever():
+    """Load or build the RAG vector store and retriever."""
+    global rag_retriever, rag_ready, rag_error
+    try:
+        logger.info("Initializing RAG retriever...")
+        vector_store = build_or_load_vector_store(device=DEVICE)
+        if vector_store:
+            rag_retriever = get_retriever(vector_store, k=MAX_RAG_DOCS)
+            if rag_retriever:
+                rag_ready = True
+                logger.info("RAG retriever initialized successfully.")
+            else:
+                rag_error = "Failed to create retriever from vector store."
+                logger.error(rag_error)
+        else:
+            rag_error = "Failed to build or load vector store."
+            logger.error(rag_error)
+    except Exception as e:
+        rag_error = f"Error initializing RAG: {str(e)}"
+        logger.error(rag_error)
+        rag_ready = False
+
+def truncate_rag_docs(docs, max_length=MAX_RAG_DOC_LENGTH):
+    """Truncate RAG documents to fit within context window."""
+    if not docs:
+        return []
+    
+    # Truncate each document's content
+    for doc in docs:
+        if len(doc.page_content) > max_length:
+            doc.page_content = doc.page_content[:max_length] + "..."
+    
+    return docs
+
+def format_conversation(user_message, retrieved_docs=None):
+    """Format conversation for model input using appropriate chat template (history removed)."""
     global tokenizer, model_id_loaded
 
     if not tokenizer:
@@ -213,14 +244,18 @@ def format_conversation(conversation_history, user_message):
         - Answer directly and concisely, avoid being verbose
         - DO NOT create fictional dialogues between user and assistant"""
 
+    # Add RAG context if available
+    if retrieved_docs:
+        # Truncate documents to fit context window
+        truncated_docs = truncate_rag_docs(retrieved_docs)
+        context_str = "\n\n".join([doc.page_content for doc in truncated_docs])
+        
+        if is_vietnamese:
+            system_prompt += f"\n\nDựa vào thông tin sau đây từ trang web để trả lời câu hỏi của người dùng nếu có liên quan:\n---BEGIN CONTEXT---\n{context_str}\n---END CONTEXT---"
+        else:
+            system_prompt += f"\n\nUse the following information from the website to answer the user's question if relevant:\n---BEGIN CONTEXT---\n{context_str}\n---END CONTEXT---"
+
     messages = [{"role": "system", "content": system_prompt}]
-    if conversation_history:
-        # Ensure history roles are 'user' or 'assistant'
-        messages.extend([
-            {"role": msg.role, "content": msg.content}
-            for msg in conversation_history
-            if msg.role in ["user", "assistant"]
-        ])
     messages.append({"role": "user", "content": user_message})
 
     try:
@@ -270,10 +305,6 @@ def clean_response(response):
     # Remove any lines that look like "User:" or "Assistant:" or "Miku:"
     cleaned = re.sub(r'(?i)(User|Assistant|Miku):\s*.*?(\n|$)', '', response)
     
-    # Remove any lines that look like questions (ending with ?)
-    cleaned = re.sub(r'\n.*?\?\s*\n', '\n', cleaned)
-    
-    # Remove any lines that start with common dialogue patterns
     dialogue_patterns = [
         r'Let\'s try',
         r'Let me ask',
@@ -288,22 +319,6 @@ def clean_response(response):
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
     
     return cleaned.strip()
-
-def simplify_text(text, lang="en"):
-    """Simplify text for language learners in the appropriate language"""
-    if lang == "vi":
-        prompt = f"""Đơn giản hóa đoạn văn này cho người học tiếng Anh. Chỉ trả lời bằng phiên bản đơn giản, không thêm bất kỳ nội dung nào khác: {text}"""
-    else:
-        prompt = f"""Simplify this text for an English learner. Only respond with the simplified version, do not add any other content: {text}"""
-    
-    try:
-        simplified = generate_response(prompt, max_new_tokens=256)
-        # Clean up the simplified response as well
-        simplified = clean_response(simplified)
-        return simplified
-    except Exception as e:
-        logger.error(f"Text simplification failed: {e}")
-        return "Text simplification currently unavailable."
 
 def detect_mood(response):
     """Detect mood from response text"""
@@ -334,40 +349,22 @@ def detect_mood(response):
         return "sad"
     return "default"
 
-def get_or_create_conversation(conversation_id=None):
-    """Get or create conversation"""
-    if conversation_id and conversation_id in conversations:
-        return conversation_id
-    
-    new_id = str(uuid.uuid4())
-    conversations[new_id] = {
-        "created_at": datetime.now().isoformat(),
-        "messages": []
-    }
-    return new_id
-
-def update_conversation(conversation_id, user_message, bot_response):
-    """Update conversation history"""
-    if conversation_id not in conversations:
-        conversation_id = get_or_create_conversation(conversation_id)
-    
-    conversations[conversation_id]["messages"].extend([
-        {"role": "user", "content": user_message, "timestamp": datetime.now().isoformat()},
-        {"role": "assistant", "content": bot_response, "timestamp": datetime.now().isoformat()}
-    ])
-    conversations[conversation_id]["messages"] = conversations[conversation_id]["messages"][-20:] # Keep last 20 messages
-
 # --- Lifespan Event Handler ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for application startup and shutdown."""
+    global rag_retriever # Ensure we modify the global variable
+    
     # Startup code (previously in @app.on_event("startup"))
     if not hf_token and MODEL_ID in ["google/gemma-2b-it"]:
         logger.warning("No Hugging Face token provided for gated model - loading may fail")
 
     check_and_set_cache_dir()  # Determine cache location first
+    
+    # Load LLM and RAG in background tasks
     background_tasks = BackgroundTasks()
     background_tasks.add_task(load_model_and_tokenizer)
+    background_tasks.add_task(load_rag_retriever) # Load RAG retriever
     await background_tasks()
     
     # Yield control back to FastAPI
@@ -378,9 +375,9 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app with lifespan handler
 app = FastAPI(
-    title="Multilingual Learning Chatbot API",
-    description="API for multilingual language learning chatbot using LLM",
-    version="2.4.0", # Updated for response cleaning and hallucination prevention
+    title="Multilingual RAG Chatbot API",
+    description="API for multilingual language learning chatbot with RAG using website content",
+    version="3.0.0", # Updated for RAG integration
     lifespan=lifespan
 )
 
@@ -396,83 +393,69 @@ app.add_middleware(
 # --- API Endpoints --- 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint with model location info"""
+    """Health check endpoint with model and RAG status"""
     return {
         "status": "ok",
-        "version": "2.4.0",
+        "version": "3.0.0",
         "model_loaded": model_loaded,
         "model_loading": model_loading,
-        "model_id": model_id_loaded if model_loaded else None,
-        "model_location": str(MODELS_DIR), # Report the actual cache dir being used
+        "model_error": model_error,
+        "model_id": model_id_loaded or MODEL_ID,
+        "rag_ready": rag_ready,
+        "rag_error": rag_error,
         "device": DEVICE,
-        "active_conversations": len(conversations)
+        "model_location": str(MODELS_DIR),
+        "embedding_model": EMBEDDING_MODEL_NAME,
     }
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Chat endpoint with language detection and simplified response"""
+    """Chat endpoint that uses RAG to enhance responses"""
+    global model_loaded, model_loading, rag_retriever, rag_ready
+    
+    # Check if model is loaded
     if not model_loaded:
-        if model_error:
-            raise HTTPException(500, detail=f"Model failed to load: {model_error}")
         if model_loading:
-             raise HTTPException(503, detail="Model is still loading, please wait")
-        raise HTTPException(500, detail="Model is not available")
-
-    conversation_id = get_or_create_conversation(request.conversation_id)
-
-    try:
-        # Detect language of user message
-        lang = detect_language(request.message)
-        logger.info(f"Detected language: {lang}")
-        
-        prompt = format_conversation(
-            request.conversation_history,
-            request.message
-        )
-        
-        raw_response = generate_response(prompt)
-        
-        # Clean the response to remove hallucinated dialogues
-        response = clean_response(raw_response)
-        logger.info(f"Original response length: {len(raw_response)}, Cleaned response length: {len(response)}")
-        
-        simplified_response = None
-        
-        # Generate simplified response in the same language
+            raise HTTPException(status_code=503, detail="Model is still loading")
+        else:
+            raise HTTPException(status_code=500, detail=f"Model failed to load: {model_error}")
+    
+    retrieved_docs = []
+    retrieved_context_info = []
+    
+    if rag_ready and rag_retriever:
         try:
-            simplified_response = simplify_text(response, lang)
-        except Exception as simplify_err:
-            logger.error(f"Error simplifying text: {simplify_err}")
-
-        update_conversation(conversation_id, request.message, response)
-        
-        return ChatResponse(
-            response=response,
-            conversation_id=conversation_id,
-            mood=detect_mood(response),
-            simplified_response=simplified_response
-        )
-        
+            retrieved_docs = rag_retriever.invoke(request.message)
+            for doc in retrieved_docs:
+                source = doc.metadata.get("source", "Unknown")
+                preview = doc.page_content[:100] + "..." if len(doc.page_content) > 100 else doc.page_content
+                retrieved_context_info.append({
+                    "source": source,
+                    "content_preview": preview
+                })
+        except Exception as e:
+            logger.error(f"Error retrieving documents: {str(e)}")
+    
+    prompt = format_conversation(request.message, retrieved_docs)
+    
+    try:
+        response = generate_response(prompt)
+        cleaned_response = clean_response(response)
     except Exception as e:
-        logger.error(f"Chat error: {str(e)}")
-        # Provide a more user-friendly error message
-        raise HTTPException(500, detail=f"An error occurred while processing your request.")
+        logger.error(f"Error generating response: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
+    
+    # Detect mood
+    mood = detect_mood(cleaned_response)
+    if not mood:
+        mood = "default"    
 
-@app.get("/api/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str):
-    """Get conversation history"""
-    if conversation_id not in conversations:
-        raise HTTPException(404, detail="Conversation not found")
-    return conversations[conversation_id]
-
-@app.delete("/api/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
-    """Delete conversation"""
-    if conversation_id in conversations:
-        del conversations[conversation_id]
-        return {"status": "deleted"}
-    raise HTTPException(404, detail="Conversation not found")
+    return ChatResponse(
+        response=cleaned_response,
+        mood=mood,
+        retrieved_context=retrieved_context_info if retrieved_context_info else None
+    )
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

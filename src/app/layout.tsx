@@ -15,6 +15,10 @@ const font = Nunito({
 export const metadata: Metadata = {
   title: "ANIMENG - Học tiếng Anh cho trẻ em",
   description: "A platform to help children learn English interactively.",
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 export default function RootLayout({

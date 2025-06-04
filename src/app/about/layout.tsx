@@ -1,7 +1,16 @@
+import { Metadata } from "next";
 import { Header } from "./header";
 
 type Props = {
   children: React.ReactNode;
+};
+
+export const metadata: Metadata = {
+  title: "ANIMENG - ABOUT",
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 const AboutLayout = ({ children }: Props) => {

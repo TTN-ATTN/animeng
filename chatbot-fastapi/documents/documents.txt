@@ -1,0 +1,267 @@
+# TÀI LIỆU THAM KHẢO CHO RAG CHATBOT FASTAPI
+
+## 1. TỔNG QUAN HỆ THỐNG
+
+### 1.1 Giới thiệu
+Chatbot RAG (Retrieval-Augmented Generation) là một hệ thống trợ lý AI được tích hợp khả năng truy xuất thông tin từ mã nguồn trang web để trả lời các câu hỏi của người dùng. Chatbot này được xây dựng trên nền tảng FastAPI, sử dụng mô hình ngôn ngữ lớn (LLM) kết hợp với vector store để cung cấp câu trả lời chính xác và phù hợp với ngữ cảnh.
+
+### 1.2 Tính năng chính
+- **Trợ lý học tiếng Anh**: Giải thích ngữ pháp, cung cấp ví dụ
+- **Hỏi đáp về trang web (RAG)**: Trả lời câu hỏi dựa trên nội dung mã nguồn trang web
+- **Đa ngôn ngữ**: Tự động phát hiện và trả lời bằng tiếng Anh hoặc tiếng Việt
+- **Phản hồi đơn giản hóa**: Cung cấp phiên bản dễ hiểu hơn của câu trả lời
+- **Hỗ trợ Markdown**: Hiển thị định dạng Markdown trong tin nhắn
+- **Ngăn chặn Hallucination**: Giảm thiểu việc mô hình tự tạo hội thoại không liên quan
+- **Tùy chỉnh Cache**: Hỗ trợ lưu trữ mô hình trên ổ đĩa ngoài để tiết kiệm dung lượng
+
+### 1.3 Kiến trúc tổng thể
+Hệ thống được chia thành các thành phần chính sau:
+1. **FastAPI Backend**: Xử lý các yêu cầu API, quản lý hội thoại và tích hợp các thành phần khác
+2. **Mô hình ngôn ngữ (LLM)**: Qwen2.5-7B (chính) hoặc Gemma-2b-it (dự phòng)
+3. **Vector Store**: FAISS lưu trữ embeddings của mã nguồn trang web
+4. **RAG Retriever**: Truy xuất thông tin liên quan từ vector store
+5. **Xử lý ngôn ngữ**: Phát hiện ngôn ngữ và định dạng phản hồi phù hợp
+
+## 2. CẤU TRÚC DỰ ÁN
+
+### 2.1 Cấu trúc thư mục
+```
+chatbot-fastapi/
+├── app/
+│   ├── main.py            # Điểm vào chính của ứng dụng FastAPI
+│   ├── rag_utils.py       # Tiện ích xử lý RAG và vector store
+│   └── documents.txt      # Tài liệu tham khảo (nếu có)
+└── requirements.txt       # Các thư viện phụ thuộc
+```
+
+### 2.2 Các thành phần chính
+- **main.py**: Chứa logic chính của API, xử lý hội thoại và tích hợp mô hình
+- **rag_utils.py**: Chứa các hàm để xây dựng và sử dụng vector store cho RAG
+- **requirements.txt**: Liệt kê các thư viện Python cần thiết
+
+## 3. MÔ HÌNH VÀ VECTOR STORE
+
+### 3.1 Mô hình ngôn ngữ (LLM)
+- **Mô hình chính**: Qwen/Qwen2.5-7B
+  - Mô hình miễn phí, mạnh mẽ trên Hugging Face
+  - Hỗ trợ đa ngôn ngữ, bao gồm tiếng Anh và tiếng Việt
+  - Hiệu suất cao, được đánh giá là một trong những mô hình 7B tốt nhất
+  - Cộng đồng lớn và cập nhật thường xuyên (cập nhật gần nhất: Sep 25, 2024)
+- **Mô hình dự phòng**: google/gemma-2b-it
+  - Nhẹ hơn, tải nhanh hơn
+  - Được sử dụng khi mô hình chính không thể tải
+
+### 3.2 Embedding Model
+- **Mô hình**: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+- **Đặc điểm**: Hỗ trợ đa ngôn ngữ, phù hợp cho cả tiếng Anh và tiếng Việt
+- **Cấu hình**: Normalize embeddings để cải thiện hiệu suất tìm kiếm
+
+### 3.3 Vector Store
+- **Loại**: FAISS (Facebook AI Similarity Search)
+- **Đường dẫn lưu trữ**: "faiss_vector_store" trong thư mục ứng dụng
+- **Cấu trúc dữ liệu**: Lưu trữ embeddings của các đoạn văn bản từ mã nguồn
+
+## 4. API ENDPOINTS
+
+### 4.1 /api/chat (POST)
+- **Mô tả**: Endpoint chính để gửi tin nhắn và nhận phản hồi từ chatbot
+- **Request Body**:
+  ```json
+  {
+    "message": "Câu hỏi của người dùng",
+    "conversation_id": "(tùy chọn) ID cuộc hội thoại trước đó",
+    "conversation_history": [
+      {"role": "user", "content": "Tin nhắn trước của người dùng"},
+      {"role": "assistant", "content": "Phản hồi trước của trợ lý"}
+    ]
+  }
+  ```
+- **Response Body**:
+  ```json
+  {
+    "response": "Câu trả lời đầy đủ của chatbot (hỗ trợ Markdown)",
+    "conversation_id": "ID cuộc hội thoại hiện tại",
+    "mood": "trạng thái cảm xúc (ví dụ: default, happy)",
+    "simplified_response": "(tùy chọn) Phiên bản đơn giản hóa của câu trả lời",
+    "retrieved_context": [
+      {"source": "đường dẫn file nguồn", "content_preview": "xem trước nội dung được truy xuất..."}
+    ]
+  }
+  ```
+
+### 4.2 /api/health (GET)
+- **Mô tả**: Kiểm tra trạng thái của server, mô hình và RAG
+- **Response Body**:
+  ```json
+  {
+    "status": "ok",
+    "version": "3.0.0",
+    "model_loaded": true,
+    "model_loading": false,
+    "model_id": "Qwen/Qwen2.5-7B",
+    "model_error": null,
+    "rag_ready": true,
+    "rag_error": null,
+    "device": "cpu"
+  }
+  ```
+
+### 4.3 /api/conversations/{conversation_id} (GET)
+- **Mô tả**: Lấy lịch sử của một cuộc hội thoại
+- **Response Body**: Lịch sử tin nhắn của cuộc hội thoại
+
+### 4.4 /api/conversations/{conversation_id} (DELETE)
+- **Mô tả**: Xóa một cuộc hội thoại
+- **Response Body**: `{"status": "ok"}`
+
+## 5. CÁC CLASS VÀ MODEL CHÍNH
+
+### 5.1 Pydantic Models
+- **ChatHistory**:
+  ```python
+  class ChatHistory(BaseModel):
+      role: str
+      content: str
+  ```
+
+- **ChatRequest**:
+  ```python
+  class ChatRequest(BaseModel):
+      message: str
+      conversation_id: Optional[str] = None
+      conversation_history: Optional[List[ChatHistory]] = None
+  ```
+
+- **ChatResponse**:
+  ```python
+  class ChatResponse(BaseModel):
+      response: str
+      conversation_id: str
+      mood: str = "default"
+      simplified_response: Optional[str] = None
+      retrieved_context: Optional[List[Dict[str, Any]]] = None
+  ```
+
+## 6. CÁC FUNCTION QUAN TRỌNG
+
+### 6.1 Quản lý mô hình
+- **load_model_and_tokenizer(model_id=MODEL_ID)**: Tải mô hình và tokenizer
+- **check_and_set_cache_dir()**: Kiểm tra và thiết lập thư mục cache tùy chỉnh
+
+### 6.2 Xử lý hội thoại
+- **format_conversation(conversation_history, user_message, retrieved_docs=None)**: Định dạng hội thoại cho đầu vào mô hình
+- **generate_response(prompt, max_new_tokens=512)**: Tạo phản hồi từ mô hình
+- **clean_response(response)**: Làm sạch phản hồi để loại bỏ hallucination
+- **simplify_text(text, lang="en")**: Đơn giản hóa văn bản cho người học
+- **detect_mood(response)**: Phát hiện trạng thái cảm xúc từ phản hồi
+
+### 6.3 Quản lý cuộc hội thoại
+- **get_or_create_conversation(conversation_id=None)**: Lấy hoặc tạo cuộc hội thoại mới
+- **update_conversation(conversation_id, user_message, bot_response)**: Cập nhật lịch sử hội thoại
+
+### 6.4 Xử lý ngôn ngữ
+- **detect_language(text)**: Phát hiện ngôn ngữ của văn bản đầu vào
+
+### 6.5 RAG (Retrieval-Augmented Generation)
+- **load_rag_retriever()**: Tải hoặc xây dựng RAG retriever
+
+## 7. RAG UTILS - XỬ LÝ VECTOR STORE
+
+### 7.1 Cấu hình
+- **EMBEDDING_MODEL_NAME**: "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+- **VECTOR_STORE_PATH**: "faiss_vector_store"
+- **SOURCE_DIRECTORY**: Đường dẫn đến thư mục mã nguồn
+- **GLOB_PATTERNS**: ["**/*.tsx", "**/*.ts", "**/*.js", "**/*.jsx", "**/*.md", "**/*.json", "**/*.html"]
+- **CHUNK_SIZE**: 1000
+- **CHUNK_OVERLAP**: 150
+
+### 7.2 Các function xử lý tài liệu
+- **get_file_loader(file_path)**: Xác định loader phù hợp cho file
+- **load_documents_safely(source_dir: str) -> list[Document]**: Tải tài liệu với xử lý lỗi tốt hơn
+- **split_documents(documents: list[Document]) -> list[Document]**: Chia tài liệu thành các đoạn nhỏ hơn
+
+### 7.3 Các function xử lý embeddings và vector store
+- **get_embeddings(device="cpu")**: Khởi tạo HuggingFace embeddings
+- **create_vector_store(chunks: list[Document], embeddings, store_path: str)**: Tạo và lưu FAISS vector store
+- **load_vector_store(store_path: str, embeddings)**: Tải FAISS vector store hiện có
+- **build_or_load_vector_store(device="cpu")**: Xây dựng vector store nếu chưa tồn tại, nếu không thì tải
+- **get_retriever(vector_store, k=5)**: Lấy retriever object từ vector store
+
+## 8. LUỒNG XỬ LÝ HỘI THOẠI
+
+### 8.1 Luồng xử lý cơ bản
+1. Nhận tin nhắn từ người dùng qua endpoint `/api/chat`
+2. Phát hiện ngôn ngữ của tin nhắn
+3. Truy xuất thông tin liên quan từ vector store (nếu RAG sẵn sàng)
+4. Định dạng hội thoại với ngữ cảnh hệ thống và thông tin truy xuất
+5. Tạo phản hồi từ mô hình LLM
+6. Làm sạch phản hồi để loại bỏ hallucination
+7. Tạo phiên bản đơn giản hóa của phản hồi (nếu cần)
+8. Phát hiện trạng thái cảm xúc từ phản hồi
+9. Cập nhật lịch sử hội thoại
+10. Trả về phản hồi cho người dùng
+
+### 8.2 Xử lý RAG
+1. Khi nhận được câu hỏi, hệ thống sẽ sử dụng retriever để tìm kiếm thông tin liên quan
+2. Các đoạn văn bản liên quan được truy xuất từ vector store
+3. Thông tin này được đưa vào ngữ cảnh hệ thống để mô hình có thể tạo phản hồi dựa trên nó
+4. Nếu không tìm thấy thông tin liên quan, mô hình sẽ trả lời dựa trên kiến thức nội tại
+
+## 9. KHỞI ĐỘNG VÀ TRIỂN KHAI
+
+### 9.1 Yêu cầu hệ thống
+- Python 3.9 trở lên
+- `pip` (trình quản lý gói Python)
+- Quyền truy cập Internet (để tải mô hình và thư viện)
+- (Khuyến nghị) Ổ đĩa ngoài (ví dụ: ổ E:) nếu muốn sử dụng tính năng cache tùy chỉnh
+- (Linux) `libmagic1`: Cần thiết cho thư viện `unstructured`
+
+### 9.2 Cài đặt
+1. Tạo môi trường ảo (khuyến nghị)
+   ```bash
+   python -m venv venv
+   # Windows: venv\Scripts\activate
+   # macOS/Linux: source venv/bin/activate
+   ```
+
+2. Cài đặt thư viện phụ thuộc
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Thiết lập Hugging Face Token (tùy chọn)
+   - Tạo file `.env` với nội dung: `HUGGINGFACE_TOKEN=hf_YOUR_TOKEN_HERE`
+
+4. Xây dựng Vector Store
+   - Chạy script `rag_utils.py`: `python rag_utils.py`
+   - Hoặc để server tự xây dựng khi khởi động
+
+### 9.3 Chạy Backend Server
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+## 10. LƯU Ý QUAN TRỌNG
+
+### 10.1 Thời gian tải mô hình
+- Các mô hình LLM lớn cần thời gian đáng kể để tải vào bộ nhớ, đặc biệt là trên CPU
+- Server sẽ báo lỗi `503 Model is still loading` nếu cố gắng gọi API chat trước khi mô hình sẵn sàng
+
+### 10.2 Xây dựng Vector Store
+- Quá trình này chỉ cần thực hiện một lần (hoặc khi nội dung trang web thay đổi đáng kể)
+- Có thể mất thời gian tùy thuộc vào kích thước mã nguồn và tốc độ máy tính
+
+### 10.3 Cache tùy chỉnh
+- Nếu có ổ E:, server sẽ cố gắng lưu các mô hình và embeddings vào `E:/models/huggingface`
+- Nếu không, sẽ sử dụng thư mục cache mặc định của Hugging Face
+
+### 10.4 RAG
+- Chatbot sẽ cố gắng sử dụng thông tin từ vector store để trả lời các câu hỏi liên quan đến trang web
+- Nếu không tìm thấy thông tin liên quan hoặc câu hỏi là về kiến thức chung/học tiếng Anh, nó sẽ trả lời dựa trên kiến thức nội tại của LLM
+
+### 10.5 Sử dụng mô hình miễn phí
+- Qwen2.5-7B là mô hình miễn phí trên Hugging Face, không yêu cầu API key hoặc phí sử dụng
+- Mô hình có thể được tải trực tiếp từ Hugging Face Hub và chạy cục bộ
+- Nếu cần mô hình nhẹ hơn, có thể sử dụng Qwen2.5-3B hoặc Qwen2.5-0.5B
+- Nếu cần mô hình mạnh hơn, có thể sử dụng Qwen2.5-14B (yêu cầu nhiều tài nguyên hơn)
+

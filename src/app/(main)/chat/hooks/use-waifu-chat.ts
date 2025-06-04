@@ -10,10 +10,10 @@ export type ChatMessage = {
   simplified_response?: string | null;
 };
 
-// Updated ChatResponse type to match backend
+// Updated ChatResponse type to match backend (history removed)
 export type ChatResponse = {
   response: string;
-  conversation_id: string;
+  // conversation_id: string; (REMOVED for optimization)
   mood: string;
   simplified_response?: string | null;
 };
@@ -24,7 +24,7 @@ export const useWaifuChat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  // const [conversationId, setConversationId] = useState<string | null>(null); (REMOVED for optimization)
   const [mood, setMood] = useState<string>('default');
   const [apiAvailable, setApiAvailable] = useState(true);
   const [modelLoaded, setModelLoaded] = useState(false);
@@ -93,20 +93,10 @@ export const useWaifuChat = () => {
       timestamp: new Date().toISOString(),
     };
     
-    // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     
     try {
-      // Prepare conversation history (exclude system messages if needed by backend)
-      const conversationHistory = messages
-        .filter(msg => msg.role !== 'system') // Exclude system messages if needed
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        }));
-      
-      // Send request to API
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: {
@@ -114,8 +104,6 @@ export const useWaifuChat = () => {
         },
         body: JSON.stringify({
           message,
-          conversation_id: conversationId,
-          conversation_history: conversationHistory,
         }),
       });
       
@@ -137,10 +125,6 @@ export const useWaifuChat = () => {
       }
       
       const data: ChatResponse = await response.json();
-      
-      if (!conversationId) {
-        setConversationId(data.conversation_id);
-      }
       
       setMood(data.mood);
       
@@ -170,24 +154,17 @@ export const useWaifuChat = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, conversationId, isLoading]);
+  }, [messages, isLoading]);
 
-  // Reset conversation
+  // Reset conversation (now only resets local state)
   const resetConversation = useCallback(() => {
     setMessages([]);
-    setConversationId(null);
-    setMood('default');
+    // setConversationId(null); (REMOVED for optimization)
+    setMood("default");
     setError(null);
     setLatestSimplifiedResponse(null);
     
-    if (conversationId) {
-      fetch(`${API_URL}/api/conversations/${conversationId}`, {
-        method: 'DELETE',
-      }).catch(err => {
-        console.error('Failed to delete conversation:', err);
-      });
-    }
-  }, [conversationId]);
+  }, []);
 
   return {
     messages,
@@ -201,6 +178,6 @@ export const useWaifuChat = () => {
     apiAvailable,
     modelLoaded,
     modelLoading,
-    latestSimplifiedResponse, // Expose latest simplified response
+    latestSimplifiedResponse,
   };
 };

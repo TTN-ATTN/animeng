@@ -1,13 +1,14 @@
 /* 
     Backend: Định nghĩa các truy vấn dữ liệu từ cơ sở dữ liệu
 */
-
-import { cache } from "react";
 import db from "./drizzle";
 // import { auth } from "@clerk/nextjs/server"; // Removed Clerk auth
 import { auth } from "@/auth"; // Import NextAuth config
-import { courses, userProgress, units, challProgress, lessons, userSubscription, users } from "./schema";
-import { eq } from "drizzle-orm";
+import { courses, userProgress, units, challProgress, lessons, userSubscription, users, verificationTokens } from "./schema";
+import { and, eq } from "drizzle-orm";
+import { cache } from "react";
+import { createHash } from 'crypto';
+import { hashMd5 } from "@/lib/password";
 
 // Helper function to get NextAuth session
 const getSession = async () => {
@@ -16,14 +17,14 @@ const getSession = async () => {
 }
 
 // cache được dùng để lưu trữ dữ liệu tạm thời, giúp giảm thiểu việc truyền Props 
-export const getCourses = cache(
+export const getCourses = 
     async () => {
         const data = await db.query.courses.findMany();
         return data;
     }
-)
 
-export const getUserProgress = cache(
+
+export const getUserProgress = 
     async () => {
         const session = await getSession();
         const userId = session?.user?.id;
@@ -49,10 +50,9 @@ export const getUserProgress = cache(
             userName: user?.name ?? "User",
             userImageSrc: user?.image ?? "/anime-girl-reading.gif",
         };
-    }
-);
+    };
 
-export const getCourseById = cache(
+export const getCourseById = 
     async (courseId: number) => {
         const data = await db.query.courses.findFirst({
             where: eq(courses.id, courseId),
@@ -68,10 +68,9 @@ export const getCourseById = cache(
             },
         });
         return data;
-    }
-);
+    };
 
-export const getUnits = cache(async () => {
+export const getUnits = async () => {
     const session = await getSession();
     const userId = session?.user?.id;
     const userProgressData = await getUserProgress(); // Use the modified getUserProgress
@@ -121,9 +120,9 @@ export const getUnits = cache(async () => {
     });
 
     return data;
-});
+};
 
-export const getCourseProgress = cache(async () => {
+export const getCourseProgress = async () => {
     const session = await getSession();
     const userId = session?.user?.id;
     const userProgressData = await getUserProgress(); // Use modified getUserProgress
@@ -164,9 +163,9 @@ export const getCourseProgress = cache(async () => {
         activeLesson: firstUncompletedLesson,
         activeLessonId: firstUncompletedLesson?.id
     };
-});
+};
 
-export const getLesson = cache(
+export const getLesson = 
     async (id?: number) => {
         const session = await getSession();
         const userId = session?.user?.id;
@@ -197,10 +196,9 @@ export const getLesson = cache(
         });
 
         return {...data, challenges: normalizedChallenges };
-    }
-);
+    };
 
-export const getLessonPercent = cache(
+export const getLessonPercent = 
     async () => {
         const courseProgressData = await getCourseProgress(); // Use modified getCourseProgress
         if(!courseProgressData?.activeLessonId) return 0;
@@ -213,11 +211,10 @@ export const getLessonPercent = cache(
         const percent = Math.round(p);
 
         return percent;
-    }
-);
+    };
 
 
-export const getUserSubscription = cache(async () => {
+export const getUserSubscription = async () => {
     const session = await getSession();
     const userId = session?.user?.id;
     if(!userId) return null;
@@ -233,10 +230,10 @@ export const getUserSubscription = cache(async () => {
         ...data,
         isActive: !!isActive,   
     };
-})
+}
 
 // Lấy ra danh sách người học hàng đầu
-export const getTopUsers = cache( async () => {
+export const getTopUsers = async () => {
     // This function might need adjustment depending on how leaderboard is displayed
     // It currently fetches from userProgress, which no longer has name/image directly
     // We might need to join with the users table
@@ -272,4 +269,103 @@ export const getTopUsers = cache( async () => {
     }));
 
     return formattedData;
-})
+}
+
+
+export const getUserFromDB = async (email: string) => {
+
+    const data = await db.query.users.findFirst({
+        where: eq(users.email, email),
+        columns: {
+            id: true,
+            email: true,
+            pwdhash: true,
+            name: true,
+            image: true,
+        }
+    });
+    return data;
+};
+
+export const insertUser = async (email: string, pwdhash: string, name: string, image:string) => {
+    const userid = hashMd5(email, name);
+    const data = await db.insert(users).values({
+        id: userid,
+        email: email,
+        pwdhash: pwdhash,
+        name: name
+    }).returning();
+    return data[0];
+}
+
+export const inserUserOauth = async (UserId: string, email:string, pwdhash: string, name: string, image: string) => {
+    const data = await db.insert(users).values({
+        id: UserId,
+        email: email,
+        pwdhash: pwdhash,
+        name: name,
+        image: image,
+    }).returning();
+    return data[0];
+}
+
+export const getUserById = async (userId: string) => {
+    const data = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+        }
+    });
+    return data;
+}
+
+export const updateToken = async (userId: string, token: string, expires: Date) => {
+    const data = await db.insert(verificationTokens).values({
+        identifier: userId,
+        token: token,
+        expires: expires,
+    });
+    return data;
+}
+
+export const getToken = async (token: string) => {
+    const data = await db.query.verificationTokens.findFirst({
+        where: eq(verificationTokens.token, token),
+        columns:{
+            identifier: true,
+            expires: true,
+        }
+    })
+    const isValid = data && data.expires.getTime() > Date.now();
+    return {
+        ...data,
+        isValid: isValid
+    }
+}
+
+export const deleteToken = async (token: string) => {
+    const data = await db.delete(verificationTokens).where(eq(verificationTokens.token, token));
+    return data;
+}
+
+export const updateUserPassword = async (userId: string, newPassword: string) => {
+  const data = await db.update(users)
+    .set({ pwdhash: newPassword })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      image: users.image,
+    });
+
+  return data[0]; // Return the updated user object
+};
+
+export const deleteTokenByToken = async (token: string) => {
+    const data = await db.delete(verificationTokens).where(eq(verificationTokens.token, token));
+    return data;
+}

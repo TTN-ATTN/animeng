@@ -7,6 +7,7 @@ import { useSession, signIn, signOut } from "next-auth/react"; // Import NextAut
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Assuming you have an Avatar component
+import { redirect } from "next/navigation"; // Import redirect for navigation
 
 export const Header = () => {
     const { data: session, status } = useSession(); // Use NextAuth session hook
@@ -19,7 +20,7 @@ export const Header = () => {
                 <div className="flex items-center gap-x-3">
                     <Image src="/anime-girl-reading.gif" height={40} width={40} alt="mascot image" unoptimized/>
                     <h1 className="text-2xl font-extrabold text-[#FFF9C4] tracking-wide">
-                        <Link href="/home">ANIMENG</Link>
+                        <Link href="/">ANIMENG</Link>
                     </h1>
                 </div>
                 <div className="flex items-center gap-x-4">
@@ -34,16 +35,17 @@ export const Header = () => {
                                         <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User Avatar"} />
                                         <AvatarFallback>{session.user?.name?.charAt(0).toUpperCase() ?? "U"}</AvatarFallback>
                                     </Avatar>
-                                    <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: "/home" })}> 
+                                    <Button variant="default" size="lg" onClick={() => signOut({ callbackUrl: "/" })}> 
                                         <LogOut className="h-5 w-5 mr-2"/>
                                         Đăng xuất
                                     </Button>
                                 </div>
                             ) : (
-                                <Button variant="default" size="lg" onClick={() => signIn("google", { callbackUrl: "/learning" })}> 
-                                    <LogIn className="h-5 w-5 mr-2"/>
-                                    Đăng nhập
-                                </Button>
+                                <Link href="/login">
+                                    <Button variant="greenBtn" size="lg" className="w-full">
+                                        Đăng nhập
+                                    </Button>
+                                </Link>
                             )}
                         </>
                     )}

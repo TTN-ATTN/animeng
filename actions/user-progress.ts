@@ -4,37 +4,38 @@
 
 "use server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { getCourseById, getUserProgress, getUserSubscription } from "../db/queries";
+import { getCourseById, getUserFromDB, getUserProgress, getUserSubscription } from "../db/queries";
 import { challProgress, userProgress, challenges } from "../db/schema";
 import db from "../db/drizzle";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {and, eq } from "drizzle-orm";
-import { upsertChallengeProgess } from "./challenge-progess";
-import { matchesGlob } from "path";
-import { get } from "http";
 import { POINTS_TO_REFILL } from "../constants";
+import { auth } from "@/auth";
+
 
 export const upsertUserProgress = async (courseId: number) => {
-    const { userId } = await auth();
-    const user = await currentUser();
-
-
-    if (!userId || !user)
+    const session  = await auth();
+    const userId = session?.user.id;
+    console.log("Courese ID:", courseId);
+    if (!session)
         throw new Error("Không có quyền truy cập");
 
     const course = await getCourseById(courseId);
+    console.log("Courese ID:", courseId);
 
     if (!course)
         throw new Error("Không tìm thấy khóa học");
+    console.log("Courese ID:", courseId);
 
     if (!course.units.length || !course.units[0].lessons.length) 
     {
         throw new Error("Khóa học không có bài học nào");
     }
-    const existingUserProgress = await getUserProgress();
+    console.log("Courese ID:", courseId);
 
+    const existingUserProgress = await getUserProgress();
+    console.log("Existing User Progress:", existingUserProgress);
     if (existingUserProgress) {
         await db.update(userProgress).set({
             activeCourseId: courseId,
@@ -43,22 +44,22 @@ export const upsertUserProgress = async (courseId: number) => {
         revalidatePath("/learning");
         redirect("/learning");
     }
+    console.log("Courese ID:", courseId);
 
     await db.insert(userProgress).values({
-        userId,
+        userId: userId!,
         activeCourseId: courseId
     });
-    
-
+    console.log("Courese ID:", courseId);
     revalidatePath("/courses");
     revalidatePath("/learning");
     redirect("/learning");
 };
 
 export const reduceHearts = async (challengeId : number) => {
-    const { userId} = await auth();
-
-    if (!userId)
+    const session = await auth();
+    const userId = session?.user.id;
+    if (session)
     {
         throw new Error("Unauthorized");
     }
@@ -79,7 +80,7 @@ export const reduceHearts = async (challengeId : number) => {
 
     const existingChallengeProgress = await db.query.challProgress.findFirst({
         where: and(
-            eq(challProgress.userId,userId),
+            eq(challProgress.userId,userId!),
             eq(challProgress.challengeId,challengeId),),
     });
     const isPractise = !!existingChallengeProgress;
@@ -105,7 +106,7 @@ export const reduceHearts = async (challengeId : number) => {
 
     await db.update(userProgress).set({
         hearts: Math.max((currentUserProgress.hearts ?? 0) - 1, 0),
-    }).where(eq(userProgress.userId,userId))
+    }).where(eq(userProgress.userId,userId!))
 
     revalidatePath("/shop");
     revalidatePath("/learning");

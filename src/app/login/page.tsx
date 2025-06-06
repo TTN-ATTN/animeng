@@ -1,5 +1,5 @@
 'use client';
-
+import { useSession } from "next-auth/react";
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -13,12 +13,12 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
+    console.log("Submitted credentials:", { email, password });
     try {
       const result = await signIn('credentials', {
         email,
@@ -27,7 +27,7 @@ const LoginPage = () => {
       });
 
       if (!result?.error) {
-        router.push('/dashboard');
+        router.push('/learning');
         router.refresh();
       } else {
         setError('Invalid email or password');
@@ -37,6 +37,7 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
+    
   };
 
   return (
@@ -111,7 +112,7 @@ const LoginPage = () => {
             </div>
 
             <div className="text-sm">
-              <Link href="/forgot-password" className="font-medium text-green-600 hover:text-green-500">
+              <Link href="/forgotpassword" className="font-medium text-green-600 hover:text-green-500">
                 Forgot your password?
               </Link>
             </div>
@@ -135,7 +136,9 @@ const LoginPage = () => {
         
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-center space-x-4">
-            <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
+            <button 
+              onClick={() => signIn("google", { callbackUrl: "/learning" })}
+              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
@@ -156,12 +159,14 @@ const LoginPage = () => {
               </svg>
               Google
             </button>
-            <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
+            {/* <button 
+
+              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
               </svg>
               Facebook
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

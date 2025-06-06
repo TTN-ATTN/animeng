@@ -165,7 +165,7 @@ export const challOptionsRelations = relations(challOptions,({one})=>({
 export const challProgress = pgTable("challProgress", {
     id: serial("id").primaryKey(),
     // userId: text("user_id").notNull(), // Old Clerk ID
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }), // New NextAuth ID
+    userId: text("user_id").notNull(),// New NextAuth ID
     challengeId: integer("challenge_id").references(() => challenges.id, { onDelete: "cascade" }).notNull(),
     completed: boolean("completed").notNull().default(false),
 });
@@ -186,7 +186,7 @@ export const challProgressRelations = relations(challProgress, ({ one }) => ({
 export const userProgress = pgTable("user_progress", {
     // userId: text("user_id").primaryKey(), // Old Clerk ID as PK
     userId: text("user_id").notNull().primaryKey().references(() => users.id, { onDelete: "cascade" }), // New NextAuth ID as PK & FK
-    // userName: text("user_name").notNull().default("User"), // Removed, use users.name
+    userName: text("user_name").notNull().default("User"), // Removed, use users.name
     // userImageSrc: text("user_image_src").notNull().default("/anime-girl-reading.gif"), // Removed, use users.image
     activeCourseId: integer("active_course_id").references(() =>
         courses.id, { onDelete: "cascade" }
@@ -218,9 +218,3 @@ export const userSubscription = pgTable("user_subscription", {
 });
 
 // Add relation for userSubscription to user
-export const userSubscriptionRelations = relations(userSubscription, ({ one }) => ({
-    user: one(users, {
-        fields: [userSubscription.userId],
-        references: [users.id],
-    }),
-}));

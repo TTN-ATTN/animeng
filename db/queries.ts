@@ -27,7 +27,8 @@ export const getCourses =
 export const getUserProgress = 
     async () => {
         const session = await getSession();
-        const userId = session?.user?.id;
+        const userId = session?.user.id;
+        // console.log("User ID:", userId);
         if (!userId) return null;
         const data = await db.query.userProgress.findFirst({
             where: eq(userProgress.userId, userId),
@@ -37,7 +38,7 @@ export const getUserProgress =
                 // user: true 
             }
         });
-
+        // console.log("User Progress Data:", data);
         // Combine with user data from session or users table if needed
         // Example: Fetch user name/image separately if not in session
         const user = await db.query.users.findFirst({
@@ -47,8 +48,8 @@ export const getUserProgress =
 
         return {
             ...data,
-            userName: user?.name ?? "User",
-            userImageSrc: user?.image ?? "/anime-girl-reading.gif",
+            // userName: user?.name ?? "User",
+            // userImageSrc: user?.image ?? "/anime-girl-reading.gif",
         };
     };
 

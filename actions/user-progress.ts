@@ -36,10 +36,11 @@ export const upsertUserProgress = async (courseId: number) => {
 
     const existingUserProgress = await getUserProgress();
     console.log("Existing User Progress:", existingUserProgress);
-    if (existingUserProgress) {
+    if (existingUserProgress?.activeCourseId) {
         await db.update(userProgress).set({
             activeCourseId: courseId,
         });
+        console.log("this step");
         revalidatePath("/courses");
         revalidatePath("/learning");
         redirect("/learning");
@@ -59,6 +60,7 @@ export const upsertUserProgress = async (courseId: number) => {
 export const reduceHearts = async (challengeId : number) => {
     const session = await auth();
     const userId = session?.user.id;
+    console.log("User ID:", userId);
     if (session)
     {
         throw new Error("Unauthorized");

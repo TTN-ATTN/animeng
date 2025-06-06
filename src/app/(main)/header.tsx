@@ -41,7 +41,7 @@ export const Header = () => {
                                         <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User Avatar"} />
                                         <AvatarFallback>{session.user?.name?.charAt(0).toUpperCase() ?? "U"}</AvatarFallback>
                                     </Avatar>
-                                    <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: "/home" })}> 
+                                    <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: "/" })}> 
                                         <LogOut className="h-5 w-5 mr-2"/>
                                         Đăng xuất
                                     </Button>

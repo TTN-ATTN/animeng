@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 
+
+
 // Renamed component to avoid conflict if used elsewhere, though filename implies it's the register page
 const RegisterPage = () => {
   const router = useRouter();
@@ -16,17 +17,37 @@ const RegisterPage = () => {
   const [name, setName] = useState(''); // Added name state for registration
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    console.warn("Registration form submitted, but backend logic is not implemented.");
-    setTimeout(() => { 
-      // SET UP Ở ĐÂY 
-        setError('Registration functionality not implemented yet.');
-        setIsLoading(false);
-    }, 1000);
+    setSuccess('');
+
+    try {
+      const res = await fetch('/api/auth/logup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      const data = await res.json();
+      console.log("Registration response:", data);
+      if (data.success) {
+        setSuccess('Registration successful!');
+        // Optionally redirect after success
+        // router.push('/login');
+      } else {
+        setError(data.error || 'Failed to register user.');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('An error occurred during registration.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F7F7F7]">
@@ -51,6 +72,13 @@ const RegisterPage = () => {
           </div>
         )}
         
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            {success}
+          </div>
+        )}
+        
+
         <form onSubmit={handleSubmit} className="space-y-6">
            {/* Added Name Field */}
           <div>
@@ -147,12 +175,12 @@ const RegisterPage = () => {
               </svg>
               Google
             </button>
-            <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
+            {/* <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50">
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
               </svg>
               Facebook
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

@@ -17,41 +17,41 @@ import { auth } from "@/auth";
 export const upsertUserProgress = async (courseId: number) => {
     const session  = await auth();
     const userId = session?.user.id;
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
     if (!session)
         throw new Error("Không có quyền truy cập");
 
     const course = await getCourseById(courseId);
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
 
     if (!course)
         throw new Error("Không tìm thấy khóa học");
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
 
     if (!course.units.length || !course.units[0].lessons.length) 
     {
         throw new Error("Khóa học không có bài học nào");
     }
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
 
     const existingUserProgress = await getUserProgress();
-    console.log("Existing User Progress:", existingUserProgress);
+    // console.log("Existing User Progress:", existingUserProgress);
     if (existingUserProgress?.activeCourseId) {
         await db.update(userProgress).set({
             activeCourseId: courseId,
         });
-        console.log("this step");
+        // console.log("this step");
         revalidatePath("/courses");
         revalidatePath("/learning");
         redirect("/learning");
     }
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
 
     await db.insert(userProgress).values({
         userId: userId!,
         activeCourseId: courseId
     });
-    console.log("Courese ID:", courseId);
+    // console.log("Courese ID:", courseId);
     revalidatePath("/courses");
     revalidatePath("/learning");
     redirect("/learning");
@@ -60,11 +60,13 @@ export const upsertUserProgress = async (courseId: number) => {
 export const reduceHearts = async (challengeId : number) => {
     const session = await auth();
     const userId = session?.user.id;
-    console.log("User ID:", userId);
-    if (session)
+    // console.log("User ID:", userId);
+    // console.log("Session:", session);
+    if (!session || !userId)
     {
         throw new Error("Unauthorized");
-    }
+    }   
+    // console.log("This step");
 
     const currentUserProgress = await getUserProgress();
     const userSubscription = await getUserSubscription();

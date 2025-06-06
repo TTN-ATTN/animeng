@@ -38,8 +38,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!existingUser) {
         const password = Math.random().toString(36).slice(-8);
         const pwdhash = await hashPassword(password);
-        console.log("Creating new user:", user.id);
-        console.log("Created user ID:", user.id);
+        // console.log("Creating new user:", user.id);
+        // console.log("Created user ID:", user.id);
         await inserUserOauth(user.id, user.email!, pwdhash, user.name!, user.image!);
       }
       return true;

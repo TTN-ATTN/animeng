@@ -26,7 +26,7 @@ export const Header = () => {
                 <div className="lg:pl-[180px] flex items-center gap-x-3">
                     <Image src="/anime-girl-reading.gif" height={40} width={40} alt="mascot image" unoptimized/>
                     <h1 className="lg:text-xl text-2xl font-extrabold text-[#FFF9C4] tracking-wide">
-                        <Link href="/home">ANIMENG</Link>
+                        <Link href="/">ANIMENG</Link>
                     </h1>
                 </div>
                 <div className="hidden lg:flex items-center gap-x-4">

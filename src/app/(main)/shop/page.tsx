@@ -29,10 +29,10 @@ const ShopPage = async () => {
             <StickyWrapper>
                 <UserProgress
                 activeCourse={userProgress.activeCourse}
-                hearts = {userProgress.hearts ?? 0} // Added ?? 0
-                points = {userProgress.points ?? 0} // Added ?? 0
+                hearts = {userProgress.hearts ?? 0} 
+                points = {userProgress.points ?? 0}
                 hasSubscription = {!!userSubscription?.isActive}/>
-                <Quests points={userProgress.points ?? 0}/> // Added ?? 0
+                <Quests points={userProgress.points ?? 0}/> 
             </StickyWrapper>
             <FeedWrapper>
                 <div className = "w-full flex flex-col items-center">

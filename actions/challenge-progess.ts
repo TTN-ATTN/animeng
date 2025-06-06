@@ -13,7 +13,7 @@ export const upsertChallengeProgess = async (challengeId: number) =>
 {
     const session = await auth();
     const userId = session?.user.id;
-    console.log("User ID:", userId);
+    // console.log("User ID:", userId);
     if (!userId)
     {
         throw new Error("Unauthorized");

@@ -1,17 +1,19 @@
 "use server";
 
 import { getUserProgress, getUserSubscription } from "../db/queries";
-import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import db from "../db/drizzle";
 import { challenges, challProgress, userProgress } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { usePageLeave, usePromise } from "react-use";
+import { auth } from "@/auth";
+
 
 export const upsertChallengeProgess = async (challengeId: number) => 
 {
-    const {userId} = await auth();
-
+    const session = await auth();
+    const userId = session?.user.id;
+    console.log("User ID:", userId);
     if (!userId)
     {
         throw new Error("Unauthorized");

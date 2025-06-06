@@ -19,7 +19,7 @@ export const Header = () => {
                 <div className="flex items-center gap-x-3">
                     <Image src="/anime-girl-reading.gif" height={40} width={40} alt="mascot image" />
                     <h1 className="text-2xl font-extrabold text-[#FFF9C4] tracking-wide">
-                        <Link href="/home">ANIMENG</Link>
+                        <Link href="/">ANIMENG</Link>
                     </h1>
                 </div>
                 <div className="flex items-center gap-x-4">
@@ -34,7 +34,7 @@ export const Header = () => {
                                         <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? "User Avatar"} />
                                         <AvatarFallback>{session.user?.name?.charAt(0).toUpperCase() ?? "U"}</AvatarFallback>
                                     </Avatar>
-                                    <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: "/home" })}> 
+                                    <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: "/" })}> 
                                         <LogOut className="h-5 w-5 mr-2"/>
                                         Đăng xuất
                                     </Button>

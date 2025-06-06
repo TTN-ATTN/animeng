@@ -8,6 +8,8 @@ import { Unit } from "./unit";
 import { Promo } from "@/components/ui/promo";
 import { Quests } from "@/components/ui/quests";
 
+export const dynamic = "force-dynamic"; // Force dynamic rendering
+
 export default async function LearningPage() {
     const userProgress = await getUserProgress();
     const units = await getUnits();
@@ -27,14 +29,14 @@ export default async function LearningPage() {
             <StickyWrapper>
                 <UserProgress
                 activeCourse={userProgress.activeCourse}
-                hearts={userProgress.hearts}
-                points={userProgress.points}
+                hearts={userProgress.hearts ?? 0}
+                points={userProgress.points ?? 0}
                 hasSubscription={!!userSubscription?.isActive}
                 />
                 {!isPro && (
                     <Promo />
                 )}
-                <Quests points={userProgress.points}/>
+                <Quests points={userProgress.points ?? 0}/>
             </StickyWrapper>
 
             <FeedWrapper><Header2 title={userProgress.activeCourse.title} />

@@ -7,6 +7,8 @@ import Image from "next/image";
 import { Items } from "./items";
 import { Quests } from "@/components/ui/quests";
 
+export const dynamic = "force-dynamic"; // Force dynamic rendering
+
 const ShopPage = async () => {
     const userProgressData = getUserProgress();
     const userSubscriptionData = getUserSubscription();
@@ -27,10 +29,10 @@ const ShopPage = async () => {
             <StickyWrapper>
                 <UserProgress
                 activeCourse={userProgress.activeCourse}
-                hearts = {userProgress.hearts}
-                points = {userProgress.points}
+                hearts = {userProgress.hearts ?? 0} 
+                points = {userProgress.points ?? 0}
                 hasSubscription = {!!userSubscription?.isActive}/>
-                <Quests points={userProgress.points}/>
+                <Quests points={userProgress.points ?? 0}/> 
             </StickyWrapper>
             <FeedWrapper>
                 <div className = "w-full flex flex-col items-center">
@@ -42,8 +44,8 @@ const ShopPage = async () => {
                     Spend your points on items to help you in your learning journey!
                 </p>
                 <Items 
-                hearts = {userProgress.hearts} 
-                points = {userProgress.points} 
+                hearts = {userProgress.hearts ?? 0} // Added ?? 0
+                points = {userProgress.points ?? 0} // Added ?? 0
                 hasSubscription = {!!userSubscription?.isActive}/>
 
                 </div>
@@ -53,3 +55,4 @@ const ShopPage = async () => {
 }
 
 export default ShopPage;
+

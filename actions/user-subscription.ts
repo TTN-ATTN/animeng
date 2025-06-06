@@ -1,21 +1,20 @@
 "use server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
-import { stripe } from "@/lib/stripe";
 import { absoluteUrl } from "@/lib/utils";
-import { getUserSubscription } from "../db/queries";
 import crypto from 'crypto'
 import https from 'https'
+import { auth } from "@/auth"; // Import NextAuth config
 
 const returnUrl = absoluteUrl("/shop")
 
+
 /* Need to change createStripeUrl to createMomoUrl */
 export const createMomoUrl = async ( req: NextApiRequest, res: NextApiResponse ) => {
-    const { userId } = await auth();
-    const user = await currentUser();
+    const session= await auth();
+    const userId = session?.user.id;
 
-    if (!userId || !user) {
+    if (!userId || !session) {
         throw new Error("Unauthorized");
     }
     const accessKey = process.env.MOMO_ACCESS_KEY!

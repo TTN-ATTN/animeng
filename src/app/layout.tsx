@@ -1,12 +1,12 @@
 import { type Metadata } from "next";
 import { Nunito } from "next/font/google";
-import {
-  ClerkProvider,
-} from "@clerk/nextjs";
 import "./globals.css";
 import { HeartsModal } from "@/components/modals/hearts-modal";
 import { PracticeModal } from "@/components/modals/practice-modal";
-import {ExitModal} from "@/components/modals/exit-modal";
+import { ExitModal } from "@/components/modals/exit-modal";
+import { Toaster } from "sonner"; // Import directly from sonner package
+import AuthProvider from "@/components/providers/auth-provider";
+
 const font = Nunito({
   variable: "--font-nunito",
   subsets: ["latin"],
@@ -27,16 +27,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Redirect to home after sign out
-    <ClerkProvider afterSignOutUrl={"/home"}> 
-      <html lang="en">
-        <body className={`${font.variable} antialiased`}>
-        <ExitModal/>
-        <HeartsModal/>
-        <PracticeModal/>
+    <html lang="en">
+      <body className={`${font.variable} antialiased`}>
+        <AuthProvider>
+          <Toaster /> {/* Added Toaster for notifications */} 
+          <ExitModal/>
+          <HeartsModal/>
+          <PracticeModal/>
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

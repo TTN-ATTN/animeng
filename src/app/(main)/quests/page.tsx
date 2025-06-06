@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Promo } from "@/components/ui/promo";
 import { quests } from "../../../../constants"
 
+export const dynamic = "force-dynamic"; // Force dynamic rendering
+
 const QuestPage = async () => {
     const userProgressData = getUserProgress();
     const userSubscriptionData = getUserSubscription();
@@ -32,8 +34,8 @@ const QuestPage = async () => {
             <StickyWrapper>
                 <UserProgress
                 activeCourse={userProgress.activeCourse}
-                hearts = {userProgress.hearts}
-                points = {userProgress.points}
+                hearts = {userProgress.hearts ?? 0}
+                points = {userProgress.points ?? 0}
                 hasSubscription = {!!userSubscription?.isActive}/>
                 {!isPro && (
                     <Promo />
@@ -50,7 +52,7 @@ const QuestPage = async () => {
                 </p>
                 <ul className="w-full">
                     {quests.map((quest) => {
-                        const progress = (userProgress.points / quest.value) * 100;
+                        const progress = ((userProgress.points ?? 0) / quest.value) * 100;
 
                         return (
                             <div key={quest.title} className="flex item-center w-full p-4 gap-x-4 border-t-2">

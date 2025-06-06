@@ -20,9 +20,9 @@ import type { AdapterAccount } from "@auth/core/adapters";
 export const users = pgTable("users", {
     id: text("id").notNull().primaryKey(),
     name: text("name"),
-    email: text("email").notNull(),
-    emailVerified: timestamp("emailVerified", { mode: "date" }),
-    image: text("image"),
+    email: text("email").unique().notNull(),
+    pwdhash: text("pwdhash").notNull(),
+    image: text("image").default("/user_icon.png")
 });
 
 export const accounts = pgTable(
@@ -47,13 +47,13 @@ export const accounts = pgTable(
     ]
 );
 
-export const sessions = pgTable("sessions", {
-    sessionToken: text("sessionToken").notNull().primaryKey(),
-    userId: text("userId")
-        .notNull()
-        .references(() => users.id, { onDelete: "cascade" }),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-});
+// export const sessions = pgTable("sessions", {
+//     sessionToken: text("sessionToken").notNull().primaryKey(),
+//     userId: text("userId")
+//         .notNull()
+//         .references(() => users.id, { onDelete: "cascade" }),
+//     expires: timestamp("expires", { mode: "date" }).notNull(),
+// });
 
 export const verificationTokens = pgTable(
     "verificationTokens",
@@ -224,13 +224,3 @@ export const userSubscriptionRelations = relations(userSubscription, ({ one }) =
         references: [users.id],
     }),
 }));
-
-// Add relations for users table
-export const usersRelations = relations(users, ({ many }) => ({
-	accounts: many(accounts),
-	sessions: many(sessions),
-    userProgress: many(userProgress),
-    challProgress: many(challProgress),
-    userSubscription: many(userSubscription),
-}));
-

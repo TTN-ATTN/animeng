@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   const token = crypto.randomBytes(32).toString("base64url");
   const expireTime = new Date(Date.now() + 15 * 60 * 60 * 1000);
-  const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${token}&userId=${user.id}`;
+  const resetLink = `${process.env.PUBLIC_URL}/reset-password?token=${token}&userId=${user.id}`;
   const html = `<h1>Hi, this is your reset password link</h1>
     <p>Click <a href="${resetLink}">here</a> to reset your password.</p>`;
 

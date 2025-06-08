@@ -20,7 +20,7 @@ from rag_utils import build_or_load_vector_store, get_retriever, EMBEDDING_MODEL
 from langchain_core.vectorstores import VectorStoreRetriever
 
 # Hugging Face token loading
-load_dotenv()  
+# load_dotenv("../.chatbot.env")  
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
 if hf_token:
     print("INFO: Hugging Face token found!")
@@ -370,8 +370,6 @@ async def lifespan(app: FastAPI):
     # Yield control back to FastAPI
     yield
     
-    # Shutdown code (if needed in the future)
-    # Any cleanup code would go here
 
 # Initialize FastAPI app with lifespan handler
 app = FastAPI(

@@ -13,11 +13,11 @@ import traceback
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Configuration
-# Use a multilingual model suitable for both English and Vietnamese
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-VECTOR_STORE_PATH = "animeng\\chatbot-fastapi\\app\\faiss_vector_store"
-SOURCE_DIRECTORY = "D:\\UNI\\web\\project\\animeng\\chatbot-fastapi\\documents" 
+# Define paths relative to the project root for cross-platform compatibility
+VECTOR_STORE_PATH = PROJECT_ROOT / "app" / "faiss"
+SOURCE_DIRECTORY = PROJECT_ROOT / "documents"
 
 # Define file types to load from the source directory
 GLOB_PATTERNS = ["**/*.tsx", "**/*.ts", "**/*.js", "**/*.jsx", "**/*.md", "**/*.json", "**/*.html", "**/*.txt", "**/*.py"]
@@ -63,13 +63,16 @@ def load_documents_safely(source_dir: str) -> list[Document]:
             # Process each file individually with appropriate loader
             for file_path in matching_files:
                 try:
+                    # Skip .env files
                     if ".env" in str(file_path):
                         continue
-
+                        
+                    # Get appropriate loader
                     loader = get_file_loader(str(file_path))
                     if loader is None:
                         continue
                         
+                    # Load document
                     docs = loader.load()
                     valid_docs = [doc for doc in docs if doc.page_content and len(doc.page_content) > 10]
                     

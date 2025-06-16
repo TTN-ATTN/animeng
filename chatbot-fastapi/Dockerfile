@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     git \
     libmagic1 \
+    swig \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

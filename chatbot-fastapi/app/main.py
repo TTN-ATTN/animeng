@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 import time
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig # Added BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from functools import lru_cache
 from pathlib import Path
 from dotenv import load_dotenv
@@ -20,7 +20,7 @@ from rag_utils import build_or_load_vector_store, get_retriever, EMBEDDING_MODEL
 from langchain_core.vectorstores import VectorStoreRetriever
 
 # Hugging Face token loading
-# load_dotenv("../.chatbot.env")  
+load_dotenv("chatbot.env") 
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
 if hf_token:
     print("INFO: Hugging Face token found!")
@@ -59,16 +59,14 @@ def check_and_set_cache_dir():
             
             # Set environment variables for Hugging Face
             os.environ["TRANSFORMERS_CACHE"] = str(MODELS_DIR)
-            os.environ["HF_HOME"] = str(MODELS_DIR) # HF_HOME often includes configs, downloads
+            os.environ["HF_HOME"] = str(MODELS_DIR)
             os.environ["HF_DATASETS_CACHE"] = str(MODELS_DIR / "datasets")
-            os.environ["TORCH_HOME"] = str(MODELS_DIR / "torch") # For PyTorch hub models
+            os.environ["TORCH_HOME"] = str(MODELS_DIR / "torch")
             
         except OSError as e:
             logger.warning(f"E: drive found, but failed to create/write to cache directory {custom_cache_path}. Error: {e}. Falling back to default cache.")
             MODELS_DIR = DEFAULT_CACHE_DIR
-            # Ensure default cache exists
             MODELS_DIR.mkdir(parents=True, exist_ok=True)
-            # Set env vars to default (or let Hugging Face handle defaults)
             os.environ["TRANSFORMERS_CACHE"] = str(MODELS_DIR)
             os.environ["HF_HOME"] = str(MODELS_DIR)
             os.environ["HF_DATASETS_CACHE"] = str(MODELS_DIR / "datasets")
@@ -76,16 +74,13 @@ def check_and_set_cache_dir():
     else:
         logger.warning("E: drive not found or not accessible. Using default cache directory.")
         MODELS_DIR = DEFAULT_CACHE_DIR
-        # Ensure default cache exists
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        # Set env vars to default
         os.environ["TRANSFORMERS_CACHE"] = str(MODELS_DIR)
         os.environ["HF_HOME"] = str(MODELS_DIR)
         os.environ["HF_DATASETS_CACHE"] = str(MODELS_DIR / "datasets")
         os.environ["TORCH_HOME"] = str(MODELS_DIR / "torch")
 
 # Model configuration
-FALLBACK_MODEL_ID = "vinai/PhoGPT-7B5-Instruct"  
 MODEL_ID = "google/gemma-2b-it"  
 DEVICE = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 logger.info(f"Using device: {DEVICE}")
@@ -107,7 +102,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     mood: str = "default"
-    retrieved_context: Optional[List[Dict[str, Any]]] = None  # Added for RAG context info
+    retrieved_context: Optional[List[Dict[str, Any]]] = None
 
 def detect_language(text):
     """Detect language of input text."""
@@ -115,10 +110,8 @@ def detect_language(text):
         lang = detect(text)
         return lang
     except LangDetectException:
-        # Default to English if detection fails
         return "en"
 
-# Model management functions
 def load_model_and_tokenizer(model_id=MODEL_ID):
     """Load model and tokenizer using the configured cache directory."""
     global model, tokenizer, model_loading, model_loaded, model_error, model_id_loaded
@@ -133,7 +126,6 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
         logger.info(f"Loading model {model_id} using cache: {MODELS_DIR}...")
         start_time = time.time()
     
-        # Load tokenizer and model 
         tokenizer = AutoTokenizer.from_pretrained(
             model_id,
             cache_dir=MODELS_DIR,
@@ -141,12 +133,11 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
             trust_remote_code=True
         )
         
-        # Optimization: Load model with 4-bit quantization
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             cache_dir=MODELS_DIR,
             device_map=DEVICE,
-            torch_dtype="auto", # Let transformers handle dtype selection with quantization
+            torch_dtype="auto",
             token=hf_token,
             trust_remote_code=True
         )
@@ -159,21 +150,10 @@ def load_model_and_tokenizer(model_id=MODEL_ID):
     except Exception as e:
         logger.error(f"Error loading model {model_id}: {str(e)}")
         model_error = str(e)
-        
-        # Try fallback only if the primary model failed
-        if model_id == MODEL_ID and FALLBACK_MODEL_ID:
-            logger.info(f"Attempting to load fallback model {FALLBACK_MODEL_ID}")
-            # Reset loading flag before recursive call
-            model_loading = False 
-            load_model_and_tokenizer(FALLBACK_MODEL_ID)
-        else:
-             # If fallback also fails or no fallback defined
-            model_loaded = False 
-            model_loading = False
+        model_loaded = False
         
     finally:
-        if model_id != MODEL_ID or not FALLBACK_MODEL_ID:
-             model_loading = False
+        model_loading = False
 
 def load_rag_retriever():
     """Load or build the RAG vector store and retriever."""
@@ -202,7 +182,6 @@ def truncate_rag_docs(docs, max_length=MAX_RAG_DOC_LENGTH):
     if not docs:
         return []
     
-    # Truncate each document's content
     for doc in docs:
         if len(doc.page_content) > max_length:
             doc.page_content = doc.page_content[:max_length] + "..."
@@ -210,19 +189,16 @@ def truncate_rag_docs(docs, max_length=MAX_RAG_DOC_LENGTH):
     return docs
 
 def format_conversation(user_message, retrieved_docs=None):
-    """Format conversation for model input using appropriate chat template (history removed)."""
+    """Format conversation for model input using appropriate chat template."""
     global tokenizer, model_id_loaded
 
     if not tokenizer:
         logger.error("Tokenizer not available for formatting conversation.")
-        # Fallback to a very basic format
         return f"User: {user_message}\nAssistant:"
 
-    # Detect language of user message
     lang = detect_language(user_message)
     is_vietnamese = lang == "vi"
     
-    # Adjust system prompt based on detected language
     if is_vietnamese:
         system_prompt = """Bạn là Miku, một trợ lý AI thân thiện giúp học tiếng Anh.
         - Chỉ trả lời câu hỏi được hỏi, không tạo ra các cuộc hội thoại giả định
@@ -230,7 +206,7 @@ def format_conversation(user_message, retrieved_docs=None):
         - Giải thích khái niệm ngữ pháp rõ ràng và ngắn gọn
         - Cung cấp ví dụ và sửa lỗi khi cần thiết
         - Trả lời bằng tiếng Việt khi được hỏi bằng tiếng Việt
-        - Sử dụng định dạng Markdown để làm nổi bật các phần quan trọng (như **từ này** cho in đậm)
+        - Sử dụng định dạng Markdown để làm nổi bật các phần quan trọng
         - Trả lời trực tiếp và ngắn gọn, tránh dài dòng
         - KHÔNG được tạo ra các cuộc đối thoại giả định giữa người dùng và trợ lý"""
     else:
@@ -240,13 +216,11 @@ def format_conversation(user_message, retrieved_docs=None):
         - Explain grammar concepts clearly and concisely
         - Provide examples and corrections when needed
         - Reply in English when asked in English
-        - Use Markdown formatting to highlight important parts (like **this word** for bold)
+        - Use Markdown formatting to highlight important parts
         - Answer directly and concisely, avoid being verbose
         - DO NOT create fictional dialogues between user and assistant"""
 
-    # Add RAG context if available
     if retrieved_docs:
-        # Truncate documents to fit context window
         truncated_docs = truncate_rag_docs(retrieved_docs)
         context_str = "\n\n".join([doc.page_content for doc in truncated_docs])
         
@@ -269,12 +243,12 @@ def format_conversation(user_message, retrieved_docs=None):
         logger.warning(f"Failed to apply chat template: {e}. Falling back to manual formatting.")
         formatted_prompt = ""
         if messages[0]["role"] == "system":
-             formatted_prompt += f"System: {messages[0]['content']}\n" # Include system prompt if possible
-             messages = messages[1:] # Remove system prompt for loop
+             formatted_prompt += f"System: {messages[0]['content']}\n"
+             messages = messages[1:]
 
         for msg in messages:
              formatted_prompt += f"{msg['role'].capitalize()}: {msg['content']}\n"
-        formatted_prompt += "Assistant:" # Prompt the model to respond
+        formatted_prompt += "Assistant:"
         return formatted_prompt
 
 def generate_response(prompt, max_new_tokens=512):
@@ -302,7 +276,6 @@ def generate_response(prompt, max_new_tokens=512):
 
 def clean_response(response):
     """Clean the response to remove hallucinated dialogues."""
-    # Remove any lines that look like "User:" or "Assistant:" or "Miku:"
     cleaned = re.sub(r'(?i)(User|Assistant|Miku):\s*.*?(\n|$)', '', response)
     
     dialogue_patterns = [
@@ -315,7 +288,6 @@ def clean_response(response):
     for pattern in dialogue_patterns:
         cleaned = re.sub(f'{pattern}.*?(\n|$)', '', cleaned)
     
-    # Clean up any extra newlines
     cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
     
     return cleaned.strip()
@@ -324,19 +296,15 @@ def detect_mood(response):
     """Detect mood from response text"""
     response_lower = response.lower()
     
-    # Vietnamese and English positive words
     positive_words = ["great", "excellent", "well done", "perfect", "amazing", 
                      "tuyệt vời", "xuất sắc", "làm tốt lắm", "hoàn hảo"]
     
-    # Vietnamese and English negative words
     negative_words = ["sorry", "incorrect", "wrong", "mistake", 
                      "xin lỗi", "không đúng", "sai", "lỗi"]
     
-    # Vietnamese and English encouraging words
     encouraging_words = ["try", "practice", "improve", "better", 
                         "cố gắng", "luyện tập", "cải thiện", "tốt hơn"]
     
-    # Vietnamese and English goodbye words
     goodbye_words = ["goodbye", "bye", "tạm biệt"]
     
     if any(word in response_lower for word in positive_words):
@@ -349,37 +317,30 @@ def detect_mood(response):
         return "sad"
     return "default"
 
-# --- Lifespan Event Handler ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for application startup and shutdown."""
-    global rag_retriever # Ensure we modify the global variable
+    global rag_retriever
     
-    # Startup code (previously in @app.on_event("startup"))
     if not hf_token and MODEL_ID in ["google/gemma-2b-it"]:
         logger.warning("No Hugging Face token provided for gated model - loading may fail")
 
-    check_and_set_cache_dir()  # Determine cache location first
+    check_and_set_cache_dir()
     
-    # Load LLM and RAG in background tasks
     background_tasks = BackgroundTasks()
     background_tasks.add_task(load_model_and_tokenizer)
-    background_tasks.add_task(load_rag_retriever) # Load RAG retriever
+    background_tasks.add_task(load_rag_retriever)
     await background_tasks()
     
-    # Yield control back to FastAPI
     yield
     
-
-# Initialize FastAPI app with lifespan handler
 app = FastAPI(
     title="Multilingual RAG Chatbot API",
     description="API for multilingual language learning chatbot with RAG using website content",
-    version="3.0.0", # Updated for RAG integration
+    version="3.0.0",
     lifespan=lifespan
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -388,7 +349,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- API Endpoints --- 
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint with model and RAG status"""
@@ -411,7 +371,6 @@ async def chat(request: ChatRequest):
     """Chat endpoint that uses RAG to enhance responses"""
     global model_loaded, model_loading, rag_retriever, rag_ready
     
-    # Check if model is loaded
     if not model_loaded:
         if model_loading:
             raise HTTPException(status_code=503, detail="Model is still loading")
@@ -443,7 +402,6 @@ async def chat(request: ChatRequest):
         logger.error(f"Error generating response: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
     
-    # Detect mood
     mood = detect_mood(cleaned_response)
     if not mood:
         mood = "default"    

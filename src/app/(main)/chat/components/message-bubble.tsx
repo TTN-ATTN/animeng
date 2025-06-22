@@ -14,13 +14,17 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
 
   return (
     <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'} mb-6 w-full`}>
-      {/* Avatar - Miku */}
       {isAssistant && (
         <div className="flex-shrink-0 h-12 w-12 rounded-full overflow-hidden mr-3 mt-1 border-2 border-teal-200">
-          
+          <Image
+            src="/miku.jpg"
+            alt="Miku Avatar"
+            width={48}
+            height={48}
+            className="object-cover w-full h-full"
+          />
         </div>
       )}
-
       {/* Message Content Area */}
       <div className={`flex flex-col max-w-[85%] ${isAssistant ? 'items-start' : 'items-end'}`}>
         {/* Main Message Bubble */}

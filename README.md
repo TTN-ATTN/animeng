@@ -40,6 +40,10 @@ Link dẫn đến video demo trang web: [Link](https://youtu.be/VjY0lNApuj4)
 
 Link dẫn đến video TikTok đánh giá mọi người về trang web: [Link](https://vt.tiktok.com/ZSkcorVPR/)
 
+### 🔗 Link Drive
+
+Link drive chứa source code có đầy đủ env và video demo: [Link](https://drive.google.com/drive/folders/1obb_AmApN4zJvD3EOpt-o4VInyAz3oIo?usp=sharing)
+
 ### Google Index 
 ![alt text](report_resource/image-11.png)
 ![alt text](report_resource/image-10.png)

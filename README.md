@@ -19,12 +19,12 @@ ANIMENG được xây dựng để cung cấp một môi trường học tiếng
 -   Hệ thống bài học tương tác.
 -   Theo dõi tiến độ học tập.
 -   Giao diện thân thiện với trẻ em.
--   Load nội dung bài học không cần chuyển trang.
 
 ### 🚀 Tính năng nâng cao:
 
 -   **Chatbot hỗ trợ học tập:** Trợ lý ảo thông minh giúp giải đáp thắc mắc và tương tác với người học.
 -   **Tích hợp thanh toán MoMo:** Hỗ trợ thanh toán tiện lợi cho các gói học cao cấp.
+-   Load nội dung bài học không cần chuyển trang.
 
 ### 🛠️ Nền tảng sử dụng:
 

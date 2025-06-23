@@ -32,6 +32,14 @@ ANIMENG được xây dựng để cung cấp một môi trường học tiếng
 -   **Frontend và Backend** `Next.js` (React/Next.js) 🌐
 -   **Cơ sở dữ liệu:** `Neon` (PostgreSQL serverless) 🐘
 
+### 📹 Video Demo trang web:
+
+Link dẫn đến video demo trang web: [Link](https://drive.google.com/file/d/1zdj12yZD4OWU_QPS0kO1vffrWotx1ybx/view?usp=sharing)
+
+### 🙌 Video TikTok:
+
+Link dẫn đến video TikTok đánh giá mọi người về trang web: [Link](https://vt.tiktok.com/ZSkcorVPR/)
+
 ### Google Index 
 ![alt text](report_resource/image-11.png)
 ![alt text](report_resource/image-10.png)

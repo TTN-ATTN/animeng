@@ -19,6 +19,7 @@ ANIMENG được xây dựng để cung cấp một môi trường học tiếng
 -   Hệ thống bài học tương tác.
 -   Theo dõi tiến độ học tập.
 -   Giao diện thân thiện với trẻ em.
+-   Load nội dung bài học không cần chuyển trang.
 
 ### 🚀 Tính năng nâng cao:
 
@@ -31,11 +32,22 @@ ANIMENG được xây dựng để cung cấp một môi trường học tiếng
 -   **Frontend và Backend** `Next.js` (React/Next.js) 🌐
 -   **Cơ sở dữ liệu:** `Neon` (PostgreSQL serverless) 🐘
 
+### Google Index 
+![alt text](report_resource/image-11.png)
+![alt text](report_resource/image-10.png)
+
 ### Kiểm tra tốc độ trang web
 
 Tốc độ của phiên bản mobile:
-![alt text](image-1.png)
+
+![alt text](report_resource/image-1.png)
+![alt text](report_resource/image-2.png)
+
 Tốc độ của phiên bản desktop:
+
+![alt text](report_resource/image-5.png)
+![alt text](report_resource/image-4.png)
+![alt text](report_resource/image-3.png)
 
 ## ⚙️ Hướng dẫn cài đặt và chạy trên máy local:
 
@@ -188,6 +200,6 @@ npm run db:studio
 
 Hoặc có thể xem trong dashboard của Neon
 
-![alt text](report_resource/image-1.png)
+![alt text](report_resource/image-admin.png)
 
 

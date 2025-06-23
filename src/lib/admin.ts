@@ -4,7 +4,7 @@ import { auth } from "@/auth"; // Import NextAuth config
 // IMPORTANT: Update these user IDs to match the NextAuth user IDs for your admin users.
 // Clerk user IDs are different from NextAuth user IDs.
 const adminUserIds = [
-    "test1",
+    "1a3afadd30146db20eebb9456cbc5dd4",
 ];
 
 export const getIsAdmin = async () => {

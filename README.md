@@ -1,102 +1,145 @@
-# Đồ án cuối kì môn lập trình web:
-## Thành viên:
-- 23521087 - Phan Bình Nhẫn - 2pi4rin7
-- 23521090 - Trần Trung Nhân - TTN-ATTN
-- 23520492 - Trần Hiếu - anotherme13
+# 📚 Đồ án cuối kì môn Lập trình Web: ANIMENG
 
-# ANIMENG
-English learning website for kids, inspired by Duolingo
+Chào mừng bạn đến với **ANIMENG** - một nền tảng học tiếng Anh trực tuyến dành cho trẻ em, lấy cảm hứng từ Duolingo! 🚀
 
-## Cài đặt các thư viện yêu cầu: 
-- [NodeJs](https://nodejs.org/en/download)
-- Các thư viện package cần cài đặt ở trong package.json
+## 👥 Thành viên nhóm:
 
-```
+-   **23521087** - Phan Bình Nhẫn ([@2pi4rin7](https://github.com/2pi4rin7))
+-   **23521090** - Trần Trung Nhân ([@TTN-ATTN](https://github.com/TTN-ATTN))
+-   **23520492** - Trần Hiếu ([@anotherme13](https://github.com/anotherme13))
+
+## 💡 Mô tả đồ án:
+
+ANIMENG được xây dựng để cung cấp một môi trường học tiếng Anh vui vẻ và hiệu quả cho trẻ em, với các tính năng nổi bật:
+
+Địa chỉ trang web: https://2pi4rin7.id.vn/
+
+### ✨ Tính năng cơ bản:
+
+-   Hệ thống bài học tương tác.
+-   Theo dõi tiến độ học tập.
+-   Giao diện thân thiện với trẻ em.
+
+### 🚀 Tính năng nâng cao:
+
+-   **Chatbot hỗ trợ học tập:** Trợ lý ảo thông minh giúp giải đáp thắc mắc và tương tác với người học.
+-   **Tích hợp thanh toán MoMo:** Hỗ trợ thanh toán tiện lợi cho các gói học cao cấp.
+
+### 🛠️ Nền tảng sử dụng:
+
+-   **Chatbot** `Flask` (Python) 🐍
+-   **Frontend và Backend** `Next.js` (React/Next.js) 🌐
+-   **Cơ sở dữ liệu:** `Neon` (PostgreSQL serverless) 🐘
+
+### Kiểm tra tốc độ trang web
+
+Tốc độ của phiên bản mobile:
+![alt text](image-1.png)
+Tốc độ của phiên bản desktop:
+
+## ⚙️ Hướng dẫn cài đặt và chạy trên máy local:
+
+### 📦 Cài đặt các thư viện yêu cầu:
+
+Đảm bảo bạn đã cài đặt [Node.js](https://nodejs.org/en/download) (phiên bản khuyến nghị) trên máy tính của mình.
+
+Sau đó, clone repository và cài đặt các dependencies:
+
+```bash
 git clone https://github.com/TTN-ATTN/animeng.git
+cd animeng
 npm install
 ```
-## Cơ sở dữ liệu
-Đăng kí một tài khoản [Neon](https://neon.com/) để sử dụng database serverless postgres
 
-Sau đó chạy command:
-```
+### 🗄️ Cơ sở dữ liệu:
+
+ANIMENG sử dụng cơ sở dữ liệu PostgreSQL serverless thông qua [Neon](https://neon.tech/).
+
+1.  Đăng ký một tài khoản Neon.
+2.  Tạo một project mới và lấy `DATABASE_URL`.
+3.  Chạy lệnh sau để đẩy schema cơ sở dữ liệu lên Neon:
+
+```bash
 npm run db:push
 ```
 
-## Cài đặt các biến môi trường:
-```
-DATABASE_URL="" # Neon API key
+### 🔑 Cài đặt các biến môi trường:
+
+Tạo một file `.env` trong thư mục gốc của dự án và điền các biến môi trường cần thiết. Bạn có thể tham khảo file `.env.copy`.
+
+```env
+DATABASE_URL="" # URL kết nối đến cơ sở dữ liệu Neon của bạn
 
 REDIRECT_URL=http://localhost:3000/home
 
-MOMO_ACCESS_KEY="" # MoMo Access Key
-MOMO_SECRET_KEY="" # MoMo Secret Key
+MOMO_ACCESS_KEY="" # Khóa truy cập MoMo
+MOMO_SECRET_KEY="" # Khóa bí mật MoMo
 
-PUBLIC_URL="" # Your Public URL
+PUBLIC_URL="" # URL công khai của ứng dụng (ví dụ: http://localhost:3000)
 
-# PUBLIC_URL=http://localhost:3000
-AUTH_SECRET="" # Your Auth Secret Key.
-# Example: 123kasdl213lkjasdn1l23kj
-HUGGINGFACE_TOKEN="" # Hugging Face Token
-GOOGLE_CLIENT_SECRET= # Your client secret from Google Cloud Console
-GOOGLE_CLIENT_ID= # Your client ID from Google Cloud Console
+AUTH_SECRET="" # Khóa bí mật cho xác thực (ví dụ: 123kasdl213lkjasdn1l23kj)
+HUGGINGFACE_TOKEN="" # Token truy cập Hugging Face (cho chatbot)
+GOOGLE_CLIENT_SECRET= # Client Secret từ Google Cloud Console
+GOOGLE_CLIENT_ID= # Client ID từ Google Cloud Console
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER="" # Your email address
-SMTP_PASS="" # Your email password or app password
-SMTP_FROM="" # Your email address
+SMTP_USER="" # Địa chỉ email gửi SMTP
+SMTP_PASS="" # Mật khẩu email hoặc mật khẩu ứng dụng SMTP
+SMTP_FROM="" # Địa chỉ email gửi SMTP
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-Sau khi thiết lập đầy đủ các biến môi trường, copy file **.env.copy** thành file **.env**
+### 🚀 Chạy ứng dụng ở local:
 
-## Chạy ở local
-Hãy đảm bảo rằng bạn đang chạy đúng thư mục **animeng**
-sau đó sau các câu lệnh sau:
-```
+Đảm bảo bạn đang ở trong thư mục `animeng`.
+
+Để chạy ứng dụng ở chế độ production:
+
+```bash
 npm run build
 npm run start
 ```
-Truy cập vào trang web trên địa chỉ localhost của bạn http://localhost:3000
 
-Hoặc chạy mới quyền developer:
+Truy cập ứng dụng tại: [http://localhost:3000](http://localhost:3000)
 
-```
+Để chạy ứng dụng ở chế độ developer (có hot-reloading):
+
+```bash
 npm run dev
 ```
 
-## Set up chatbot locally
-### 1. Yêu cầu
+## 🤖 Thiết lập Chatbot cục bộ:
+
+### 📝 Yêu cầu:
 
 *   Python 3.9 trở lên
-*   `pip` 
+*   `pip`
 *   `docker`
 *   `docker-compose`
 
-### 2. Cài đặt
+### ⬇️ Cài đặt:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+### 🖥️ Chạy Chatbot Server:
 
-### 3. Chạy Chatbot Server
-
-```
+```bash
 python app/rag_utils.py [--rebuild]
 python app/main.py
 ```
 
 Kiểm tra trạng thái server bằng cách truy cập `http://localhost:8000/api/health`.
 
-### 4. API Endpoint
+### 🌐 API Endpoint của Chatbot:
 
 *   **POST** `/api/chat`
     *   **Request Body:**
         ```json
         {
-          "message": "Câu hỏi của bạn ở đây",
+          "message": "Câu hỏi của bạn ở đây"
         }
         ```
     *   **Response Body:**
@@ -111,38 +154,40 @@ Kiểm tra trạng thái server bằng cách truy cập `http://localhost:8000/a
         ```
 *   **GET** `/api/health`: Kiểm tra trạng thái server, mô hình và RAG.
 
+### 🐳 Cài đặt và Chạy Chatbot bằng Docker:
 
-### 5. Cài đặt và Chạy bằng Docker
+Đảm bảo bạn đã cài đặt [Docker Engine](https://docs.docker.com/engine/install/) và [Docker Compose](https://docs.docker.com/compose/install/).
 
-*   **Docker:** Cài đặt Docker Engine. ([Hướng dẫn cài đặt Docker](https://docs.docker.com/engine/install/))
-*   **Docker Compose:** Cài đặt Docker Compose (thường đi kèm với Docker Desktop). ([Hướng dẫn cài đặt Docker Compose](https://docs.docker.com/compose/install/))
+1.  **Tạo file môi trường:** Trong thư mục gốc của dự án (cùng cấp với `docker-compose.yaml`), tạo một file tên là `chatbot.env`.
+2.  **Thêm Hugging Face Token:** Thêm dòng sau vào file `chatbot.env`:
 
-
-
-1.  **Tạo file môi trường:** Trong thư mục gốc của dự án (cùng cấp với `docker-compose.yaml`), tạo một file tên là `chatbot.env`
-2.  **Thêm Hugging Face Token:** :
     ```env
     HUGGINGFACE_TOKEN=YOUR_TOKEN_HERE
     ```
-    Thay `YOUR_TOKEN_HERE` bằng token Hugging Face thực tế của bạn. 
-    
-    [How to create huggingface token](https://huggingface.co/docs/hub/en/security-tokens)
+    Thay `YOUR_TOKEN_HERE` bằng token Hugging Face thực tế của bạn. Bạn có thể tìm hiểu cách tạo token tại [đây](https://huggingface.co/docs/hub/en/security-tokens).
 
-#### Build và Chạy Container
+#### Build và Chạy Container:
+
 1.  **Build Docker Image:** Chạy lệnh sau để build image dựa trên `Dockerfile`:
     ```bash
     docker-compose build
     ```
 2.  **Chạy Container:** Chạy lệnh sau để khởi động container ở chế độ nền (detached mode):
     ```bash
-    docker-compose up
+    docker-compose up -d
     ```
 
-## To access admin page
+## 🔒 Truy cập trang quản trị (Admin Page):
 
-Get userID from clerk and add to /lib/admin.ts
+Để truy cập trang quản trị, bạn cần lấy `userID` từ trong database và thêm vào file `/lib/admin.ts`.
 
-![alt text](image.jpg)
+Ta vào quản trị database 
+```
+npm run db:studio
+```
 
+Hoặc có thể xem trong dashboard của Neon
+
+![alt text](report_resource/image-1.png)
 
 

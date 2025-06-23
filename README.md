@@ -55,6 +55,7 @@ Tốc độ của phiên bản desktop:
 
 ![alt text](report_resource/image-5.png)
 ![alt text](report_resource/image-4.png)
+![alt text](report_resource/image-3.png)
 ![alt text](report_resource/image-chat.png)
 
 ## ⚙️ Hướng dẫn cài đặt và chạy trên máy local:

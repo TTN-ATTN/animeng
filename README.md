@@ -34,7 +34,7 @@ ANIMENG được xây dựng để cung cấp một môi trường học tiếng
 
 ### 📹 Video Demo trang web:
 
-Link dẫn đến video demo trang web: [Link](https://drive.google.com/file/d/1zdj12yZD4OWU_QPS0kO1vffrWotx1ybx/view?usp=sharing)
+Link dẫn đến video demo trang web: [Link](https://youtu.be/VjY0lNApuj4)
 
 ### 🙌 Video TikTok:
 

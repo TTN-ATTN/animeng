@@ -2,7 +2,7 @@
 
 Chào mừng bạn đến với **ANIMENG** - một nền tảng học tiếng Anh trực tuyến dành cho trẻ em, lấy cảm hứng từ Duolingo! 🚀
 
-## 👥 Thành viên nhóm:
+## 👥 Thành viên nhóm 8:
 
 -   **23521087** - Phan Bình Nhẫn ([@2pi4rin7](https://github.com/2pi4rin7))
 -   **23521090** - Trần Trung Nhân ([@TTN-ATTN](https://github.com/TTN-ATTN))

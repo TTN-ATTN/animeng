@@ -2,6 +2,8 @@
 
 Chào mừng bạn đến với **ANIMENG** - một nền tảng học tiếng Anh trực tuyến dành cho trẻ em, lấy cảm hứng từ Duolingo! 🚀
 
+Địa chỉ trang web: https://2pi4rin7.id.vn/
+
 ## 👥 Thành viên nhóm 8:
 
 -   **23521087** - Phan Bình Nhẫn ([@2pi4rin7](https://github.com/2pi4rin7))
@@ -11,8 +13,6 @@ Chào mừng bạn đến với **ANIMENG** - một nền tảng học tiếng A
 ## 💡 Mô tả đồ án:
 
 ANIMENG được xây dựng để cung cấp một môi trường học tiếng Anh vui vẻ và hiệu quả cho trẻ em, với các tính năng nổi bật:
-
-Địa chỉ trang web: https://2pi4rin7.id.vn/
 
 ### ✨ Tính năng cơ bản:
 
